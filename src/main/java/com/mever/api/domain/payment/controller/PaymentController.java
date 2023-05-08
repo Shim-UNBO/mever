@@ -1,6 +1,5 @@
 package com.mever.api.domain.payment.controller;
 
-import com.mever.api.domain.payment.service.PaymentService;
 import com.mever.api.domain.payment.dto.PaymentResHandleDto;
 import com.mever.api.domain.payment.service.PaymentService;
 import io.swagger.annotations.ApiOperation;

@@ -25,16 +25,18 @@ public class HomeController {
             @ApiParam(value = "토스 측 결제 고유 번호", required = true) @RequestParam String paymentKey,
             @ApiParam(value = "우리 측 주문 고유 번호", required = true) @RequestParam String orderId,
             @ApiParam(value = "실제 결제 금액", required = true) @RequestParam Long amount,
+            @ApiParam(value = "실제 결제 금액", required = true) @RequestParam String url,
             HttpServletRequest request
     ) throws Exception {
         try {
             System.out.println("paymentKey = " + paymentKey);
             System.out.println("orderId = " + orderId);
             System.out.println("amount = " + amount);
+            System.out.println("url = " + url);
 
             String result = paymentService.requestFinalPayment(paymentKey, orderId, amount).toString();
 
-            return "redirect:https://mever.me";
+            return "redirect:"+url;
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());

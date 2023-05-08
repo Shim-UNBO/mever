@@ -106,7 +106,6 @@ public class PaymentService {
         PaymentResHandleDto paymentResHandleDtorder = objectMapper.readValue(jsonString,PaymentResHandleDto.class);
         paymentResHandleDtorder.setMId(resJson.get("mId").toString());
 
-        System.out.println(resJson);
         if(resJson.get("card")!=null){
             JSONParser parser = new JSONParser();
             String card = objectMapper.writeValueAsString(resJson.get("card"));

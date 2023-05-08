@@ -25,7 +25,6 @@ public class MemberReq {
         member.setName(name);
         member.setSurvey(survey);
         member.setDcrp(dcrp);
-        member.setAfterDay(afterDay);
         return member;
     }
     public Member toMemberBuilder() {
@@ -35,7 +34,8 @@ public class MemberReq {
                 .name(name)
                 .survey(survey)
                 .dcrp(dcrp)
-                .password(password)
+                .password(phone)
+                .afterDay(0L)
                 .build();
     }
 }
