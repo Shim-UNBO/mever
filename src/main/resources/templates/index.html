@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <title>결제하기</title>
+  <meta charset="utf-8">
+  <script src="https://js.tosspayments.com/v1"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+</head>
+<body>
+<section>
+  <!-- ... -->
+  <span>총 주문금액</span>
+  <span>3000 원</span>
+  <button id="payment-button">3000원 결제하기</button>
+  <button id="list">list</button>
+  <button id="member">insMember</button>
+  <button id="cancel">cancel</button>
+  <button id="login">login</button>
+  <button id="email">email</button>
+  <button id="send">send</button>
+</section>
+<script>
+
+  var clientKey = 'test_ck_OyL0qZ4G1VOmmAG4JOP8oWb2MQYg'
+  var tossPayments = TossPayments(clientKey)
+  var button = document.getElementById('payment-button') // 결제하기 버튼
+  button.addEventListener('click', function () {
+    $.ajax({
+      type : "post",
+      url : "/payment",
+      data:{
+        payType:'카드',
+        totalAmount: 3000,
+        orderName: '상품',
+        name: '홍길동',
+        email: 'hong@gmail.com'
+      },
+      success : function (res) {
+        tossPayments.requestPayment('CARD', {
+          amount: res.totalAmount,
+          orderId: res.orderId,
+          orderName:res.orderName,
+          name: res.name,
+          email: res.email,
+          successUrl: 'http://localhost:8080/success',
+          failUrl: 'http://localhost:8080/fail',
+        })
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+
+  })
+  $("#list").on('click',function(){
+    $.ajax({
+      type : "post",
+      url : "/paymentList",
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+
+  $("#member").on('click',function(){
+    $.ajax({
+      type : "post",
+      url : "/insMember",
+      data:{
+        email:'qersad',
+        phone: '01012341234',
+        survey: '상품',
+        dcrp: '홍길동'
+      },
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+
+  $("#cancel").on('click',function(){
+    $.ajax({
+      type : "post",
+      url : "/cancelOrder",
+      data:{
+        cancelReason:'qersad',
+        paymentKey: 'xMBvpmjnoD4yKeq5bgrp2dNZEg1Ym43GX0lzW6YOQJ1w9NLR',
+      },
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+
+  $("#login").on('click',function(){
+    $.ajax({
+      type : "post",
+      contentType: 'application/json',
+      url : "/chkLogin",
+      data: JSON.stringify({
+        email:'test',
+        phone: '123',
+        password: '12'
+      }),
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+
+  $("#email").on('click',function(){
+    $.ajax({
+      type : "post",
+      contentType: 'application/json',
+      url : "/mail/send",
+      data: JSON.stringify({
+        address:'ajh@mever.me',
+        title: 'test',
+        content: 'test'
+      }),
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+  $("#send").on('click',function(){
+    $.ajax({
+      type : "post",
+      contentType: 'application/json',
+      url : "/automail",
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+</script>
+</body>
+</html>
