@@ -10,6 +10,7 @@ import com.mever.api.domain.payment.entity.Orders;
 import com.mever.api.domain.payment.repository.CancelOrderRepository;
 import com.mever.api.domain.payment.repository.OrderMapper;
 import com.mever.api.domain.payment.repository.OrderRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
@@ -34,6 +37,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final CancelOrderRepository cancelOrderRepository;
     private final MemberRepository memberRepository;
+
     @Value("${payments.toss.test_client_api_key}")
     private String testClientApiKey;
 
@@ -45,6 +49,8 @@ public class PaymentService {
     private String failCallBackUrl = "/fail";
 
     private String tossOriginUrl = "https://api.tosspayments.com/v1/payments/";
+
+    private String autoPayUrl = "https://api.tosspayments.com/v1/billing/authorizations/issue/";
 
     @Transactional
     public PaymentResHandleDto requestPayments(PaymentResHandleDto paymentResHandleDto) throws Exception {
@@ -112,7 +118,7 @@ public class PaymentService {
             Object obj = parser.parse( card );
             JSONObject jsonObj = (JSONObject) obj;
             paymentResHandleDtorder.setNumber(jsonObj.get("number").toString());
-            paymentResHandleDtorder.setCompany(jsonObj.get("company").toString());
+//            paymentResHandleDtorder.setCompany(jsonObj.get("company").toString());
         }
 
         if(resJson.get("easyPay")!=null){
@@ -126,6 +132,93 @@ public class PaymentService {
         orderRepository.save(paymentResHandleDtorder.toOrderEntity(orders));
         return paymentResHandleDtorder;
     }
+    @Transactional
+    public PaymentResHandleDto autoPayments(PaymentResHandleDto paymentResHandleDto) throws Exception {
+        try {
+
+            Member member = memberRepository.findByEmail(paymentResHandleDto.getEmail()).orElse(null);
+            member.setName(paymentResHandleDto.getName());
+            memberRepository.save(member);
+
+            Orders orders = paymentResHandleDto.toOrderBuilder();
+            orderRepository.save(orders);
+//            paymentResHandleDto.setSuccessUrl("http://localhost:8080/success");
+            paymentResHandleDto.setFailUrl(failCallBackUrl);
+            paymentResHandleDto.setOrderId(orders.getOrderId());
+            return paymentResHandleDto;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+    @Transactional
+    public PaymentResHandleDto autoFinalPayment(HttpServletRequest request) throws Exception {
+
+        HttpClient httpClient = HttpClient.newBuilder().build();
+        //시크릿 키 인코딩
+        testSecretApiKey = testSecretApiKey + ":";
+        String encodedAuth = new String(Base64.getEncoder().encode(testSecretApiKey.getBytes(StandardCharsets.UTF_8)));
+        String customerKey = request.getParameter("customerKey");
+        String authKey = request.getParameter("authKey");
+
+        String requestBody = String.format("{\"authKey\":\"%s\",\"customerKey\":\"%s\"}", authKey,customerKey);
+        java.net.http.HttpRequest request1 = java.net.http.HttpRequest.newBuilder()
+                .uri(URI.create(autoPayUrl + "issue"))
+                .header("Authorization", "Basic " + MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request1, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.statusCode());
+        System.out.println(response.body());
+//
+//
+//        RestTemplate rest = new RestTemplate();
+//
+//        HttpHeaders headers = new HttpHeaders();
+//
+//        headers.setBasicAuth(encodedAuth);
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+//
+//        JSONObject param = new JSONObject();
+////        param.put("orderId", orderId);
+////        param.put("amount", amount);
+//        JSONObject resJson =  rest.postForEntity(
+//                autoPayUrl + customerKey,
+//                new HttpEntity<>(param, headers),
+//                JSONObject.class
+//        ).getBody();
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//
+//        String jsonString = objectMapper.writeValueAsString(resJson);
+//        PaymentResHandleDto paymentResHandleDtorder = objectMapper.readValue(jsonString,PaymentResHandleDto.class);
+//        paymentResHandleDtorder.setMId(resJson.get("mId").toString());
+//
+//        if(resJson.get("card")!=null){
+//            JSONParser parser = new JSONParser();
+//            String card = objectMapper.writeValueAsString(resJson.get("card"));
+//            Object obj = parser.parse( card );
+//            JSONObject jsonObj = (JSONObject) obj;
+//            paymentResHandleDtorder.setNumber(jsonObj.get("number").toString());
+////            paymentResHandleDtorder.setCompany(jsonObj.get("company").toString());
+//        }
+//
+//        if(resJson.get("easyPay")!=null){
+//            JSONParser parser = new JSONParser();
+//            String easyPay= objectMapper.writeValueAsString(resJson.get("easyPay"));
+//            Object obj = parser.parse(easyPay);
+//            JSONObject jsontest = (JSONObject) obj;
+//            paymentResHandleDtorder.setCompany(jsontest.get("provider").toString());
+//        }
+////        Orders orders = orderRepository.findByOrderId(orderId);
+////        orderRepository.save(paymentResHandleDtorder.toOrderEntity(orders));
+        return null;
+    }
+
 
     @Transactional
     public List<PaymentResHandleDto> paymentList() {

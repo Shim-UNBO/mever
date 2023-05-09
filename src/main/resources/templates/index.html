@@ -18,24 +18,25 @@
   <button id="login">login</button>
   <button id="email">email</button>
   <button id="send">send</button>
+  <button id="autoOrder">자동 결제</button>
 </section>
 <script>
-
   var clientKey = 'test_ck_OyL0qZ4G1VOmmAG4JOP8oWb2MQYg'
   var tossPayments = TossPayments(clientKey)
-
+  var auto = document.getElementById('autoOrder')
   var button = document.getElementById('payment-button') // 결제하기 버튼
   button.addEventListener('click', function () {
     $.ajax({
       type : "post",
       url : "/payment",
-      data:{
+      contentType: 'application/json',
+      data: JSON.stringify({
         payType:'카드',
         totalAmount: 3000,
         orderName: '상품',
         name: '홍길동',
         email: 'hong@gmail.com'
-      },
+      }),
       success : function (res) {
         tossPayments.requestPayment('CARD', {
           amount: res.totalAmount,
@@ -43,9 +44,46 @@
           orderName:res.orderName,
           name: res.name,
           email: res.email,
-          successUrl: 'http://localhost:8080/success',
+          successUrl: 'http://localhost:8080/success?url=http://localhost:8080/',
           failUrl: 'http://localhost:8080/fail',
         })
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+
+  })
+
+  auto.addEventListener('click', function () {
+    $.ajax({
+      type : "post",
+      url : "/autoPayment",
+      contentType: 'application/json',
+      data: JSON.stringify({
+        payType:'카드',
+        totalAmount: 3000,
+        orderName: '상품',
+        name: '홍길동',
+        email: 'hong@gmail.com',
+      }),
+      success : function (res) {
+          tossPayments.requestBillingAuth('카드', {
+            card:{
+              number:res.number
+            },
+            billingKey:res.billingKey,
+            customerKey: 'aENcQAtPdYbTjGhtQnNVj',
+            authKey: res.authKey,
+            amount: res.totalAmount,
+            orderId: res.orderId,
+            orderName: res.orderName,
+            name: res.name,
+            email: res.email,
+            successUrl: window.location.origin+"/autoSuccess",
+            failUrl: 'http://localhost:8080/fail',
+          })
+        console.log(res);
       },
       error : function (status) {
         alert(status + "error!");

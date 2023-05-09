@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 @Tag(name = "결제")
 @RestController
@@ -22,9 +26,10 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/payment")
-    @Operation(summary  = "결제 요청", description = "결제 요청에 필요한 값들을 반환합니다.")
+    @Operation(summary = "결제 요청", description = "결제 요청에 필요한 값들을 반환합니다.")
     public ResponseEntity<PaymentResHandleDto> requestPayments(
-            @ApiParam(value = "요청 객체", required = true) @RequestBody PaymentResHandleDto paymentResHandleDto) throws Exception {
+            @ApiParam(value = "요청 객체", required = true)
+            @RequestBody PaymentResHandleDto paymentResHandleDto) throws Exception {
         try {
             return ResponseEntity.ok(paymentService.requestPayments(paymentResHandleDto));
         } catch (Exception e) {
@@ -54,6 +59,19 @@ public class PaymentController {
             throw new Exception(e.getMessage());
         }
     }*/
+    @PostMapping("/autoPayment")
+    @Operation(summary = "자동 결제 요청", description = "자동 결제 요청에 필요한 값들을 반환합니다.")
+    public ResponseEntity<PaymentResHandleDto> autotPayments(
+            @ApiParam(value = "요청 객체", required = true)
+            @RequestBody PaymentResHandleDto paymentResHandleDto) throws Exception {
+        try {
+            return ResponseEntity.ok(paymentService.autoPayments(paymentResHandleDto));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+
 
     @PostMapping("/paymentList")
     @ApiOperation(value = "payment 정보", notes = "payment 정보를 반환합니다.")

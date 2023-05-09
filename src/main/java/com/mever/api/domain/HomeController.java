@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Map;
+
 @Controller
 public class HomeController {
     @RequestMapping("/")
@@ -37,6 +41,29 @@ public class HomeController {
             String result = paymentService.requestFinalPayment(paymentKey, orderId, amount).toString();
 
             return "redirect:"+url;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+    @RequestMapping("/autoSuccess")
+//    @GetMapping("/autoSuccess")
+    @ApiOperation(value = "결제 성공 리다이렉트", notes = "결제 성공 시 최종 결제 승인 요청을 보냅니다.")
+    public String autoFinalPayments(HttpServletRequest request) throws Exception {
+        try {
+            Map<String, String[]> paraMap = request.getParameterMap();
+            for (String name : paraMap.keySet()){
+                String[] values = paraMap.get(name);
+                System.out.println(name+" = "+ Arrays.toString(values));
+            }
+
+            String customerKey = request.getParameter("customerKey");
+            String authKey = request.getParameter("authKey");
+            System.out.println("customerKey = " + customerKey);
+            System.out.println("authKey = " + authKey);
+            String result = paymentService.autoFinalPayment(request).toString();
+
+            return "redirect:"+"http://localhost:8080/";
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());
