@@ -57,5 +57,15 @@ public class Orders {
     String number;                      // "433012******1234",
     @Column(nullable = true)
     String company;                     // "현대",
+    @Column(nullable = true)
+    String billingKey;                     // "자동 결제 billingKey",
+    @Column(nullable = true)
+    String customerKey;                     // "고객 ID",
+    @Column(nullable = true)
+    Object receipt;                     // "결제 receipt",
+    @Column(nullable = true)
+    Object chekout;                     // "결제 chekout",
+    @Column(nullable = true)
+    Object period;                     // "결제 기간",
 
 }

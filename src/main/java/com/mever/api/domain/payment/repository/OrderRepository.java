@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Orders, Long> {
     public Orders findByOrderId(String orderId);
     public Orders findByPaymentKey(String paymentKey);
+    public Orders findByCustomerKey(String CustomerKey);
 }
