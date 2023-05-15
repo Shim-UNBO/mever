@@ -1,13 +1,18 @@
 package com.mever.api.domain;
 
+import com.mever.api.domain.email.dto.SmsDto;
+import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.payment.service.PaymentService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -23,6 +28,9 @@ public class HomeController {
     }
     @Autowired
     PaymentService paymentService;
+
+    @Autowired
+    SendService sendService;
 
     @GetMapping("/success")
     @ApiOperation(value = "결제 성공 리다이렉트", notes = "결제 성공 시 최종 결제 승인 요청을 보냅니다.")
@@ -77,4 +85,23 @@ public class HomeController {
             // mever12!@
         }
     }
+    @PostMapping(value = "/send/sms/success")
+    @Operation(summary  = "sms api success", description = "sms 전송 후 처리결과.")
+    public String successSms(@ApiParam(value = "sms 전송 후 처리 결과") SmsDto smsDto,@ApiParam(value = "sms 전송 후 처리 결과") String url) throws Exception {
+        try {
+            System.out.println("result_code = " + smsDto.getResult_code());
+            System.out.println("result_msg = " + smsDto.getResult_msg());
+            /*System.out.println("total_count = " + total_count);
+            System.out.println("succ_count = " + succ_count);
+            System.out.println("fail_count = " + fail_count);
+            System.out.println("money = " + money);*/
+
+           ResponseEntity.ok(sendService.successSms(smsDto));
+            return "redirect:"+url;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+
 }

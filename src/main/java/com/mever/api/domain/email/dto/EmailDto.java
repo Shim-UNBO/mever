@@ -1,6 +1,7 @@
 package com.mever.api.domain.email.dto;
 
 import com.mever.api.domain.email.entity.Mail;
+import com.mever.api.domain.email.entity.SendHistory;
 import lombok.*;
 
 @Data
@@ -15,12 +16,15 @@ public class EmailDto {
     private String[] ccAddress;
     private String title;
     private String content;
+    private String phone;
 
-    public Mail toMailEntity(Mail mail) {
-        mail.setAddress(mail.getAddress());
-        mail.setTitle(mail.getTitle());
-        mail.setContent(mail.getContent());
-
-        return mail;
+    public SendHistory toMailBuilder() {
+        return SendHistory.builder()
+                .email(address)
+                .phone(phone)
+                .title(title)
+                .content(content)
+                .type("mail")
+                .build();
     }
 }

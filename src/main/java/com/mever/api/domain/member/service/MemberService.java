@@ -40,5 +40,13 @@ public class MemberService {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
+    @Transactional
+    public Object memberList(String email) {
+        if(email==null||email.equals("")) {
+            return memberRepository.findAll();
+        }
+        return memberRepository.findByEmail(email).orElse(null);
+    }
+
 
 }

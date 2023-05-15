@@ -3,7 +3,10 @@ package com.mever.api.domain.schedule;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mever.api.domain.email.dto.EmailDto;
-import com.mever.api.domain.email.service.EmailService;
+import com.mever.api.domain.email.dto.ReservationEmailDto;
+import com.mever.api.domain.email.dto.SmsDto;
+import com.mever.api.domain.email.repository.EmailMapper;
+import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.member.dto.MemberRes;
 import com.mever.api.domain.member.entity.Member;
 import com.mever.api.domain.member.repository.MemberMapper;
@@ -19,14 +22,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.io.DataInput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,11 +48,15 @@ import java.util.List;
 public class ScheduledTasks {
 
     @Autowired
-    private EmailService emailService;
+    private SendService sendService;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
     private MemberMapper memberMapper;
+
+    @Autowired
+    private EmailMapper emailMapper;
+
     @Autowired
     private SubscriptionRepository subscriptionRepository;
     @Autowired
@@ -56,20 +66,17 @@ public class ScheduledTasks {
     @Value("${payments.toss.test_secret_api_key}")
     private String testSecretApiKey;
 
-    // @Scheduled(cron = "0 26 18 * * ?")
+   // @Scheduled(cron = "0 26 18 * * ?")
     public void cronMailSend() throws MessagingException {
-        List<MemberRes> memberRes =memberMapper.getMemberList();
+        List<ReservationEmailDto> emailRes =emailMapper.getEmailList();
 
-        for(int i =0; i<memberRes.size();i++){
-            EmailDto mailDto=EmailDto.builder()
-                    .address(memberRes.get(i).getEmail())
-                    .title(String.valueOf(memberRes.get(i).getTitle()))
-                    .content(String.valueOf(memberRes.get(i).getContent()))
-                    .build();
-            emailService.sendMessage(mailDto);
-            Member member = memberRepository.findByEmail(memberRes.get(i).getEmail()).orElse(null);
-            member.setAfterDay(Long.valueOf(memberRes.get(i).getAfterDay())+1);
-            memberRepository.save(member);
+        for(int i =0; i<emailRes.size();i++){
+            ReservationEmailDto reservationEmailDto=ReservationEmailDto.builder()
+                .email(emailRes.get(i).getEmail())
+                .title(String.valueOf(emailRes.get(i).getTitle()))
+                .content(String.valueOf(emailRes.get(i).getContent()))
+                .build();
+            sendService.schedulEmail(reservationEmailDto);
         }
     }
     // 매일 12시 0분 0초에 실행
@@ -129,4 +136,3 @@ public class ScheduledTasks {
         }
     }
 }
-
