@@ -71,7 +71,7 @@ public class SendService {
 
         helper.addAttachment(MimeUtility.encodeText(fileName, "UTF-8", "B"), new ByteArrayResource(IOUtils.toByteArray(file.getInputStream())));
 */
-      //  수신자 개별 전송
+        //  수신자 개별 전송
         /*for(String s : mailDto.getAddress()) {
         	helper.setTo(s);
         	emailSender.send(message);
@@ -80,7 +80,7 @@ public class SendService {
         helper.setTo(mailDto.getAddress());
         emailSender.send(message);
         log.info("mail multiple send complete.");
-        EmailDto emailDto= EmailDto.builder()
+        EmailDto emailDto = EmailDto.builder()
                 .content(mailDto.getContent())
                 .address(mailDto.getAddress())
                 .phone(mailDto.getPhone())
@@ -90,15 +90,16 @@ public class SendService {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
     @Transactional
     public ResponseEntity saveReservationMail(List<ReservationEmailDto> list) throws MessagingException, IOException {
         LocalDate today = LocalDate.now();
         LocalDate sendDate = today;
-       //TODO 스케쥴 돌릴 때 리스트로 받아와서 작업해야함
+        //TODO 스케쥴 돌릴 때 리스트로 받아와서 작업해야함
 
         LocalDate formattedDate = LocalDate.parse(sendDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
-        for(int i =0; i<list.size();i++){
+        for (int i = 0; i < list.size(); i++) {
             switch (list.get(i).getPeriod()) {
                 case "new":
                     sendDate = today.plusDays(1);
@@ -120,7 +121,7 @@ public class SendService {
                     break;
 //        )
             }
-            ReservationEmailDto reservationEmailDto=ReservationEmailDto.builder()
+            ReservationEmailDto reservationEmailDto = ReservationEmailDto.builder()
                     .email(list.get(i).getEmail())
                     .title(String.valueOf(list.get(i).getTitle()))
                     .content(String.valueOf(list.get(i).getContent()))
@@ -131,6 +132,7 @@ public class SendService {
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
     @Transactional
     public void sendMessage(EmailDto mailDto) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
@@ -158,7 +160,7 @@ public class SendService {
         //수신자 한번에 전송
         helper.setTo(mailDto.getAddress());
         emailSender.send(message);
-        SmsDto smsDto= SmsDto.builder()
+        SmsDto smsDto = SmsDto.builder()
                 .msg(mailDto.getContent())
                 .email(mailDto.getAddress())
                 .phone(mailDto.getPhone())
@@ -167,6 +169,7 @@ public class SendService {
         sendRepository.save(smsDto.toSendBuilder());
 
     }
+
     @Transactional
     public void schedulEmail(ReservationEmailDto reservationEmailDto) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
@@ -178,7 +181,7 @@ public class SendService {
         helper.setTo(reservationEmailDto.getEmail());
         emailSender.send(message);
 
-        SmsDto smsDto= SmsDto.builder()
+        SmsDto smsDto = SmsDto.builder()
                 .msg(reservationEmailDto.getContent())
                 .email(reservationEmailDto.getEmail())
                 .phone(reservationEmailDto.getPhone())
@@ -190,49 +193,50 @@ public class SendService {
         LocalDate sendDate = today;
 
         LocalDate formattedDate = LocalDate.parse(sendDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        String content="";
+        String content = "";
 
-            switch (reservationEmailDto.getPeriod()) {
-                case "new":
-                    sendDate = today.plusDays(1);
-                    content= String.valueOf(reservationEmailDto.getContent());
-                    Member member = memberRepository.findByEmail(reservationEmailDto.getEmail()).orElse(null);
-                    member.setAfterDay(Long.valueOf(member.getAfterDay())+1);
-                    memberRepository.save(member);
-                    break;
-                case "day":
-                    sendDate = today.plusDays(1);
-                    content= String.valueOf(reservationEmailDto.getContent());
-                    break;
-                case "week":
-                    sendDate = today.plusWeeks(1);
-                    content= String.valueOf(reservationEmailDto.getContent());
-                    break;
-                case "month":
-                    sendDate = today.plusMonths(1);
-                    content= String.valueOf(reservationEmailDto.getContent());
-                    break;
-                case "year":
-                    sendDate = today.plusYears(1);
-                    content= String.valueOf(reservationEmailDto.getContent());
-                    break;
-                default:
-                    // 유효하지 않은 period 값이 들어온 경우
-                    break;
+        switch (reservationEmailDto.getPeriod()) {
+            case "new":
+                sendDate = today.plusDays(1);
+                content = String.valueOf(reservationEmailDto.getContent());
+                Member member = memberRepository.findByEmail(reservationEmailDto.getEmail()).orElse(null);
+                member.setAfterDay(Long.valueOf(member.getAfterDay()) + 1);
+                memberRepository.save(member);
+                break;
+            case "day":
+                sendDate = today.plusDays(1);
+                content = String.valueOf(reservationEmailDto.getContent());
+                break;
+            case "week":
+                sendDate = today.plusWeeks(1);
+                content = String.valueOf(reservationEmailDto.getContent());
+                break;
+            case "month":
+                sendDate = today.plusMonths(1);
+                content = String.valueOf(reservationEmailDto.getContent());
+                break;
+            case "year":
+                sendDate = today.plusYears(1);
+                content = String.valueOf(reservationEmailDto.getContent());
+                break;
+            default:
+                // 유효하지 않은 period 값이 들어온 경우
+                break;
 //        )
-            }
-            ReservationEmailDto reservationEmail=ReservationEmailDto.builder()
-                    .email(reservationEmailDto.getEmail())
-                    .title(reservationEmailDto.getTitle())
-                    .content(content)
-                    .sendDate(sendDate.toString())
-                    .period(reservationEmailDto.getPeriod())
-                    .build();
-            reservationMailRepository.save(reservationEmail.toReservationMailBuilder());
+        }
+        ReservationEmailDto reservationEmail = ReservationEmailDto.builder()
+                .email(reservationEmailDto.getEmail())
+                .title(reservationEmailDto.getTitle())
+                .content(content)
+                .sendDate(sendDate.toString())
+                .period(reservationEmailDto.getPeriod())
+                .build();
+        reservationMailRepository.save(reservationEmail.toReservationMailBuilder());
 
     }
+
     @Transactional
-    public ResponseEntity<Object> sendSms(String phone,String email) throws Exception {
+    public ResponseEntity<Object> sendSms(String phone, String email) throws Exception {
         RestTemplate rest = new RestTemplate();
         rest.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
@@ -240,11 +244,11 @@ public class SendService {
         URI uri = URI.create("http://link.smsceo.co.kr/sendsms_utf8.php");
 
         HttpHeaders headers = new HttpHeaders();
-      /*  headers.setContentType(MediaType.TEXT_HTML);*/
+        /*  headers.setContentType(MediaType.TEXT_HTML);*/
         //headers.add("Content-Type", "text/html; charset=UTF-8");
         //headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
         //headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED,);
-       // headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
+        // headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
         headers.setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
 
         /*JSONObject param = new JSONObject();*/
@@ -257,22 +261,22 @@ public class SendService {
         param.add("phone", phone);
         param.add("msg", "300,000원 진행 <br>" +
                 "7일간 18,550,000 마감 <br>" +
-                "\"당일수익\"환급원칙<br>"+
+                "\"당일수익\"환급원칙<br>" +
                 "https://mever.me/");
         param.add("callback", "01072818209");
         param.add("userid", smsUserid);
         param.add("return_url", "http://localhost:8080/send/sms/success");
         param.add("userkey", smsUserkey);
 
-       SmsDto smsDto= SmsDto.builder()
-               .msg(param.get("msg").toString())
-               .email(email)
-               .phone(param.get("phone").toString())
-               .type("sms")
-               .build();
+        SmsDto smsDto = SmsDto.builder()
+                .msg(param.get("msg").toString())
+                .email(email)
+                .phone(param.get("phone").toString())
+                .type("sms")
+                .build();
 
         try {
-          String respon=rest.postForObject(uri,  new HttpEntity<>(param , headers), String.class);
+            String respon = rest.postForObject(uri, new HttpEntity<>(param, headers), String.class);
             System.out.println(respon);
             String[] params = respon.split("&");
             Map<String, String> map = new HashMap<String, String>();
@@ -287,11 +291,11 @@ public class SendService {
                 map.put(name, value);
             }*/
             sendRepository.save(smsDto.toSendBuilder());
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());
         }
-       // if (SmsDto == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        // if (SmsDto == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
       /*  Orders orders = orderRepository.findByPaymentKey(paymentKey);
         cancelOrderRepository.save(paymentResHandleDto.toCancelOrder(orders));
@@ -305,7 +309,7 @@ public class SendService {
 
         try {
             sendRepository.save(smsDto.toSendBuilder());
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());
         }
@@ -313,23 +317,22 @@ public class SendService {
     }
 
     @Transactional
-    public ResponseEntity<Object> sendList(String type, String email,String phone) throws Exception {
+    public Object sendList(String type, String email, String phone) throws Exception {
 
         try {
-            if((email==null||email.equals(""))&&(phone==null||phone.equals(""))){
-                sendRepository.findAllByType(type);
+            if ((email == null || email.equals("")) && (phone == null || phone.equals(""))) {
+                return sendRepository.findAllByType(type);
             }
-            if(email!=null||!email.equals("")){
-                sendRepository.findAllByTypeAndEmail(type,email);
+            if (email != null || !email.equals("")) {
+                return sendRepository.findAllByTypeAndEmail(type, email);
             }
-            if(phone!=null||!phone.equals("")){
-                sendRepository.findAllByTypeAndPhone(type,phone);
+            if (phone != null || !phone.equals("")) {
+                return sendRepository.findAllByTypeAndPhone(type, phone);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-
 }
