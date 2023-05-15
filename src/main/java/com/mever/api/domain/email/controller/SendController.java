@@ -83,10 +83,10 @@ public class SendController {
         }
     }
 
-    @PostMapping(value = "/send/list/")
+    @PostMapping(value = "/send/list")
     @Operation(summary  = "전송 이력", description = "email,phone 입력")
     public ResponseEntity sendList( @ApiParam(value = "type", required = false) @RequestParam String type
-            ,@ApiParam(value = "email")@RequestParam(required = false) String phone
+            ,@ApiParam(value = "phone")@RequestParam(required = false) String phone
             ,@ApiParam(value = "email")@RequestParam(required = false) String email) throws Exception {
         try {
             return ResponseEntity.ok(sendService.sendList(type,email,phone));

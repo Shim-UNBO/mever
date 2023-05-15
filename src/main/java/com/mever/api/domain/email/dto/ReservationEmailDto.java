@@ -15,6 +15,7 @@ public class ReservationEmailDto {
     private String sendDate;
     private String email;
     private String title;
+    private String date;
     private String content;
     private String period;
     private String phone;

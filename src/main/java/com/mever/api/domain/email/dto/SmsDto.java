@@ -28,6 +28,7 @@ public class SmsDto {
     private String fail_count;
     private String money;
     private String mseq;
+    private String date;
 
     public SendHistory toSendBuilder() {
         return SendHistory.builder()

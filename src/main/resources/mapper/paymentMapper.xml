@@ -8,12 +8,9 @@
     <select id="getPayList" resultType="PaymentResHandleDto">
         SELECT
                 m_id,
-                m.email,
-                m.name,
+                o.email,
+                o.name,
                 m.phone,
-                m.dcrp,
-                m.survey,
-                m.regdate,
                 version,
                 payment_key,
                 order_id,
@@ -32,8 +29,8 @@
                 type,
                 number,
                 company
-        FROM member m
-            left join orders o on m.email=o.email
+        FROM orders o
+            left join member m on m.email=o.email
     </select>
 
 </mapper>

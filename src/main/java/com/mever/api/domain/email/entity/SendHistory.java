@@ -25,5 +25,7 @@ public class SendHistory {
     String phone;
     @Column()
     String type;
+    @Column()
+    String date;
 
 }
