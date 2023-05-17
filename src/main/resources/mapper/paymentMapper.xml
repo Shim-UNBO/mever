@@ -32,5 +32,32 @@
         FROM orders o
             left join member m on m.email=o.email
     </select>
-
+    <select id="getSubscriptionList" resultType="PaymentResHandleDto">
+        select  a.email
+             ,a.name
+             ,c.phone
+             ,a.order_name as orderName
+             ,concat(format(b.amount,0),'원') as currency
+             ,b.start_date as requestedAt
+             ,date(b.payment_date) as approvedAt
+             ,case
+                when b.period = 'day' then '일 결제'
+                when b.period = 'week' then '주 결제'
+                when b.period = 'month' then '월 결제'
+                when b.period = 'year' then '연 결제'
+                ELSE ''
+              end as period
+            ,b.status as status
+            ,b.billing_key
+        from 	market.orders a
+        inner
+        join 	market.subscription b
+        on 		a.billing_key = b.billing_key
+        and     a.type = 'BILLING'
+        inner
+        join	market.member c
+        on 		a.email = c.email
+        where   c.email = #{email}
+        and     c.phone = #{phone}
+    </select>
 </mapper>

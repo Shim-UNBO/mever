@@ -18,6 +18,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
+
 @Tag(name = "결제")
 @RestController
 public class PaymentController {
@@ -71,7 +73,34 @@ public class PaymentController {
             throw new Exception(e.getMessage());
         }
     }
-
+    @PostMapping("/subscription/list")
+    @ApiOperation(value = "정기 구독 리스트", notes = "정기 구독 결제 내용을 반환합니다.")
+    public ResponseEntity<List> subscriptionList(
+//            @ApiParam(value = "토스 측 결제 고유 번호", required = true) @RequestParam String email,
+//            @ApiParam(value = "우리 측 주문 고유 번호", required = true) @RequestParam String phone,
+            @RequestBody Map<String,String> requestData
+            ) throws Exception {
+        try {
+            String email = requestData.get("email");
+            String phone = requestData.get("phone");
+            return ResponseEntity.ok(paymentService.subscriptionList(email,phone));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+    @PostMapping("/subCancel")
+    @ApiOperation(value = "정기결제 취소", notes = "다음 정기 결제 건에 대해서 결제취소를 요청합니다.")
+    public ResponseEntity  subCancel(
+            @ApiParam(value = "토스 측 주문 빌링키", required = true) @RequestParam String billingKey
+            ) throws Exception {
+        try {
+            return ResponseEntity.ok(paymentService.subCancel(billingKey));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
 
     @PostMapping("/paymentList")
     @ApiOperation(value = "payment 정보", notes = "payment 정보를 반환합니다.")

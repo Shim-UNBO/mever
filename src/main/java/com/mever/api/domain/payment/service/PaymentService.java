@@ -279,8 +279,21 @@ public class PaymentService {
                 break;
         }
         LocalDate formattedDate = LocalDate.parse(billingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        subscription.setPaymentDate(formattedDate); // 예시로 현재 시간으로 업데이트
+        subscription.setPaymentDate(formattedDate);
         subscriptionRepository.save(subscription); // 변경 내용 저장
+    }
+    @Transactional
+    public List<PaymentResHandleDto> subscriptionList(String email,String phone) {
+        List<PaymentResHandleDto> paymentRes=orderMapper.getSubscriptionList(email,phone);
+        return paymentRes;
+    }
+    @Transactional
+    public ResponseEntity subCancel(String billingKey) {
+        Subscription subscription = subscriptionRepository.findByBillingKey(billingKey);
+        subscription.setStatus("INACTIVE"); // 예시로 현재 시간으로 업데이트
+        subscriptionRepository.save(subscription);
+//        List<PaymentResHandleDto> paymentRes=orderMapper.setSubCancel();
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional

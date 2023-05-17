@@ -12,5 +12,6 @@ import java.util.List;
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
     public List<Subscription> findByStatusAndCustomerKeyIsNotNullAndBillingKeyIsNotNull(String status);
     public Subscription findByCustomerKeyAndBillingKey(String customerKey,String billingKey);
+    public Subscription findByBillingKey(String billingKey);
 
 }

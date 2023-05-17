@@ -29,6 +29,8 @@
     <option value="year">Year</option>
   </select>
   <button id="autoPayment">자동 결제</button>
+  <button id="sub">구독 정보</button>
+  <button id="subCancel">구독 취소</button>
 
 
   <form name="smsform" method="POST" action="http://link.smsceo.co.kr/sendsms_utf8.php">
@@ -113,6 +115,39 @@
       }
     });
 
+  })
+  $("#sub").on('click',function(){
+    $.ajax({
+      type : "POST",
+      url : "/subscription/list",
+      contentType: "application/json",
+      data:JSON.stringify({
+        email:"testsub@naver.com",
+        phone:"01023232323"
+      }),
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
+  })
+  $("#subCancel").on('click',function(){
+    $.ajax({
+      type : "post",
+      url : "/subCancel",
+      data:{
+        // cancelReason:'qersad',
+        billingKey: 'f2m9W1H0k1YuS8vlxvS8RXgsuIKWuxse15YM4YP3AP8=',
+      },
+      success : function (res) {
+        console.log(res)
+      },
+      error : function (status) {
+        alert(status + "error!");
+      }
+    });
   })
   $("#list").on('click',function(){
     $.ajax({

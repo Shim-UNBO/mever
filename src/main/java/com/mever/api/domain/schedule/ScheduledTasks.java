@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
@@ -63,6 +64,7 @@ public class ScheduledTasks {
     private PaymentService paymentService;
     private final OrderRepository orderRepository;
     private String autoPayRequest = "https://api.tosspayments.com/v1/billing/";
+
     @Value("${payments.toss.test_secret_api_key}")
     private String testSecretApiKey;
 

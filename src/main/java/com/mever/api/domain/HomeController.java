@@ -103,5 +103,8 @@ public class HomeController {
             throw new Exception(e.getMessage());
         }
     }
-
+    @GetMapping("/refundRequire")
+    public String refundRequire(){
+        return "redirect:w/refundRequire.html";
+    }
 }
