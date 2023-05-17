@@ -18,4 +18,7 @@ public class MemberRes {
     private Long afterDay;        //가입 후 며칠 지났는지
     private String title;
     private String content;
+    private String regdate;
+    private String appointment;
+
 }

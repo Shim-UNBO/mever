@@ -18,13 +18,20 @@ public class MemberService {
     @Transactional
     public ResponseEntity insMember(MemberReq memberReq) {
         String email=memberReq.getEmail();
+        String test="";
         Member member = memberRepository.findByEmail(email).orElse(null);
         if(member == null) {
             memberReq.setPassword(memberReq.getPhone());
             memberRepository.save(memberReq.toMemberBuilder());
         } else {
-            member.setPhone(memberReq.getPhone());
-            memberRepository.save(memberReq.toMemberEntity(member));
+            if(memberReq.getPhone()!=null&&!test.equals(memberReq.getPhone())){
+                member.setPhone(memberReq.getPhone());
+                System.out.println("123");
+            }
+            if(memberReq.getAppointment()!=null&&!test.equals(memberReq.getAppointment())){
+                member.setAppointment(memberReq.getAppointment());
+            }
+            memberRepository.save(member);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -19,8 +19,7 @@ public class Member {
 
     @Column(nullable = false)
     private String email;
-
-    @Column(nullable = false)
+    @Column
     private String phone;
     @Column
     private String password;
@@ -32,6 +31,8 @@ public class Member {
     private String dcrp;
     @Column
     private Long afterDay;
+    @Column
+    private String appointment;
 
     public MemberRes toDto() {
         return MemberRes.builder()
