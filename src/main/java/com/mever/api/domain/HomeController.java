@@ -61,6 +61,7 @@ public class HomeController {
         }
     }
     @RequestMapping("/autoSuccess")
+    @GetMapping("/autoSuccess")
     @ApiOperation(value = "자동 결제 성공 리다이렉트", notes = "자동 결제 성공 시 최종 결제 승인 요청을 보냅니다.")
     public String autoFinalPayments(
             @ApiParam(value = "토스 측 자동 결제 고유 번호", required = true) @RequestParam String authKey,
@@ -74,8 +75,9 @@ public class HomeController {
 //                System.out.println(name+" = "+ Arrays.toString(values));
 //            }
             String result = paymentService.autoFinalPayment(authKey,customerKey).toString();
-//            String url = request.getContextPath();
-            String url = "https://mever.me/art_gallery/";
+           String url2 = request.getContextPath();
+           String url3 = request.getRequestURI();
+            String url = "https://mever.me/";
 
             return "redirect:"+url;
         } catch (Exception e) {

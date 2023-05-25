@@ -31,7 +31,12 @@
   <button id="autoPayment">자동 결제</button>
   <button id="sub">구독 정보</button>
   <button id="subCancel">구독 취소</button>
+  <button id="anal">통계 보기</button>
+  <textarea style="">
+  </textarea>
+<script>
 
+</script>
 
   <form name="smsform" method="POST" action="http://link.smsceo.co.kr/sendsms_utf8.php">
     <input type="hidden" name="userkey" value="BzxQZV1sDzVSYAdmUX4HOFZmB3QAM1MuA34=">
@@ -54,6 +59,32 @@
   var autoPay = document.getElementById('autoPayment')
   var period = document.getElementById('period');
   var value = period.options[period.selectedIndex].value;
+  $("#anal").on('click',function(){
+    $.ajax({
+      type: "post",
+      url: "/analyticsList",
+      data:{
+        group:"cafe1"
+      },
+      success: function (res) {
+        console.log(res);
+        var textarea = $("textarea");
+        textarea.val(""); // 기존 내용 초기화
+
+        // 리스트를 textarea에 출력
+        for (var i = 0; i < res.length; i++) {
+          var analyticsDto = res[i];
+          var text = JSON.stringify(analyticsDto);
+          textarea.val(function (index, value) {
+            return value + text + "\n";
+          });
+        }
+      },
+      error: function (status) {
+        alert(status + " error!");
+      }
+    });
+  });
   button.addEventListener('click', function () {
     $.ajax({
       type : "post",
