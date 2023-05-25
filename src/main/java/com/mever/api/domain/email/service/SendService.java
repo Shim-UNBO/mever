@@ -12,12 +12,16 @@ import com.mever.api.domain.member.repository.MemberRepository;
 import com.mever.api.domain.payment.dto.CancelOrderDto;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeUtility;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -25,6 +29,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,7 +58,7 @@ public class SendService {
     private final ReservationMailRepository reservationMailRepository;
 
     @Transactional
-    public ResponseEntity sendMultipleMessage(EmailDto mailDto, MultipartFile file) throws MessagingException, IOException {
+    public ResponseEntity sendMultipleMessage(EmailDto mailDto) throws MessagingException, IOException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         //메일 제목 설정
@@ -67,10 +72,14 @@ public class SendService {
         helper.setFrom(FROM_ADDRESS);
 
         //첨부 파일 설정
-       /* String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        // Add the attachment
+        if (mailDto.getFile() != null && !mailDto.getFile().isEmpty()) {
+            String fileName = mailDto.getFile().getOriginalFilename();
+            byte[] fileBytes = mailDto.getFile().getBytes();
+            InputStreamSource inputStreamSource = new ByteArrayResource(fileBytes);
+            helper.addAttachment(fileName, inputStreamSource);
+        }
 
-        helper.addAttachment(MimeUtility.encodeText(fileName, "UTF-8", "B"), new ByteArrayResource(IOUtils.toByteArray(file.getInputStream())));
-*/
         //  수신자 개별 전송
         /*for(String s : mailDto.getAddress()) {
         	helper.setTo(s);
@@ -224,6 +233,7 @@ public class SendService {
                 break;
 //        )
         }
+        //날짜 업데이트
         ReservationEmailDto reservationEmail = ReservationEmailDto.builder()
                 .email(reservationEmailDto.getEmail())
                 .title(reservationEmailDto.getTitle())

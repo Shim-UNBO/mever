@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,12 +32,12 @@ public class SendController {
     public String mailSend() {
         return "textMail";
     }
-    @PostMapping("/send/mail")
+    @PostMapping(value="/send/mail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary  = "메일 전송", description = "메일 전송합니다.")
     public ResponseEntity sendMail(
-            @ApiParam(value = "요청 객체", required = true) @RequestBody EmailDto emailDto, MultipartFile file) throws Exception {
+            @ApiParam(value = "요청 객체", required = true) @ModelAttribute EmailDto emailDto) throws Exception {
         try {
-            return ResponseEntity.ok(sendService.sendMultipleMessage(emailDto, file));
+            return ResponseEntity.ok(sendService.sendMultipleMessage(emailDto));
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());

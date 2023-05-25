@@ -3,6 +3,7 @@ package com.mever.api.domain.email.dto;
 import com.mever.api.domain.email.entity.Mail;
 import com.mever.api.domain.email.entity.SendHistory;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -17,6 +18,7 @@ public class EmailDto {
     private String title;
     private String content;
     private String phone;
+    MultipartFile file;
 
     public SendHistory toMailBuilder() {
         return SendHistory.builder()
