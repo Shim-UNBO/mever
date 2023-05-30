@@ -15,26 +15,33 @@ import java.util.stream.Collectors;
 
 @RestController
 public class AnalyticsController {
+    @Autowired
+    AnalyticsReporting analyticsReporting;
 
     @PostMapping("/analyticsList")
     public ResponseEntity<List> analytics(
             @ApiParam(value = "소속 그룹", required = true) @RequestParam String group){
-        List<AnalyticsDto> analyticsList = AnalyticsReporting.analyticReport();
+        List<AnalyticsDto> analyticsList = analyticsReporting.analyticReport();
         List<AnalyticsDto> filteredList;
         switch (group) {
             case "cafe1":
                 filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPage_title().equals("메버(MEVER)-선릉카페"))
+                        .filter(dto -> dto.getPath_url().equals("/cafe1/"))
                         .collect(Collectors.toList());
                 break;
             case "art1":
                 filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPage_title().equals("메버(MEVER)-청담갤러리1"))
+                        .filter(dto -> dto.getPath_url().equals("/art1/"))
                         .collect(Collectors.toList());
                 break;
             case "art2":
                 filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPage_title().equals("메버(MEVER)-청담갤러리2"))
+                        .filter(dto -> dto.getPath_url().equals("/art2/"))
+                        .collect(Collectors.toList());
+                break;
+            case "hospital1":
+                filteredList = analyticsList.stream()
+                        .filter(dto -> dto.getPath_url().equals("/hospital1/"))
                         .collect(Collectors.toList());
                 break;
             default:

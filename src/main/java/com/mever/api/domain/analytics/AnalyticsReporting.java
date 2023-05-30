@@ -19,19 +19,33 @@ import com.google.api.services.analyticsreporting.v4.AnalyticsReportingScopes;
 
 import com.google.api.services.analyticsreporting.v4.model.*;
 import com.mever.api.domain.analytics.dto.AnalyticsDto;
+import com.mever.api.domain.analytics.entity.Analytics;
+import com.mever.api.domain.analytics.repository.AnalyticsRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-
+@Slf4j
+@Service
+@RequiredArgsConstructor
 public class AnalyticsReporting {
+
+    @Autowired
+    private final AnalyticsRepository analyticsRepository;
     private static final String APPLICATION_NAME = "Hello Analytics Reporting";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String KEY_FILE_LOCATION = "C:\\Users\\PC\\IdeaProjects\\mever\\src\\main\\java\\com\\mever\\api\\domain\\analytics\\client_secrets.json";
     private static final String VIEW_ID = "268763310";
 
-    public static List<AnalyticsDto> analyticReport() {
+    public List<AnalyticsDto> analyticReport() {
         List<AnalyticsDto> analyticsList = null;
         try {
             com.google.api.services.analyticsreporting.v4.AnalyticsReporting service = initializeAnalyticsReporting();
-            GetReportsResponse response = getReport(service);
+//            GetReportsResponse response = getReport(service);
+//            GetReportsResponse response = getTodayUser(service);
+            GetReportsResponse response = getBrowser(service);
             analyticsList = printResponse(response);
 //            printResponse(response);
 
@@ -73,32 +87,29 @@ public class AnalyticsReporting {
     private static GetReportsResponse getReport(com.google.api.services.analyticsreporting.v4.AnalyticsReporting service) throws IOException {
         // Create the DateRange object.
         DateRange dateRange = new DateRange();
-        dateRange.setStartDate("7DaysAgo");
+        dateRange.setStartDate("30DaysAgo");
         dateRange.setEndDate("today");
+
+        //Dimension별 조사가 이뤄진다. ex) 페이지타이틀별,성별별,브라우저별
+        Dimension pageTitle = new Dimension().setName("ga:pageTitle");
+        Dimension browser = new Dimension().setName("ga:browser");
+        Dimension country = new Dimension().setName("ga:country");
+        Dimension channel = new Dimension().setName("ga:acquisitionTrafficChannel");
+        Dimension gaDate = new Dimension().setName("ga:sessionDate");
+        Dimension pathUrl = new Dimension().setName("ga:pagePath");
+
 
         // Metrics(조회할 컬럼) 객체 생성
         Metric sessions = new Metric()
                 .setExpression("ga:sessions")
                 .setAlias("sessions");
 
-        Metric newUsers = new Metric().setExpression("ga:newUsers")
-                .setAlias("newUsers");
-
-        Metric users = new Metric().setExpression("ga:users")
-                .setAlias("users");
-
-        Metric sessionDuration = new Metric().setExpression("ga:avgSessionDuration")
-                .setAlias("sessionDuration");
-
-        Metric pageviews = new Metric().setExpression("ga:pageviews")
-                .setAlias("pageviews");
-
-        Metric hits = new Metric().setExpression("ga:hits")
-                .setAlias("hits");
-
-        Metric percentNewSessions = new Metric().setExpression("ga:percentNewSessions")
-                .setAlias("percentNewSessions");
-
+        Metric newUsers = new Metric().setExpression("ga:newUsers").setAlias("newUsers");
+        Metric users = new Metric().setExpression("ga:users").setAlias("users");
+        Metric sessionDuration = new Metric().setExpression("ga:avgSessionDuration").setAlias("sessionDuration");
+        Metric pageviews = new Metric().setExpression("ga:pageviews").setAlias("pageviews");
+        Metric hits = new Metric().setExpression("ga:hits").setAlias("hits");
+        Metric percentNewSessions = new Metric().setExpression("ga:percentNewSessions").setAlias("percentNewSessions");
 
         // 여러 Metrics를 사용할 경우
         List<Metric> MetricList = new ArrayList<>();
@@ -109,27 +120,10 @@ public class AnalyticsReporting {
         MetricList.add(hits);
         MetricList.add(percentNewSessions);
 
-        //Dimension별 조사가 이뤄진다. ex) 페이지타이틀별,성별별,브라우저별
-        Dimension pageTitle = new Dimension().setName("ga:pageTitle");
-        Dimension browser = new Dimension().setName("ga:browser");
-
         List<OrderBy> orderBys = new ArrayList<>();
         OrderBy orderBy = new OrderBy().setFieldName("pageviews")
                 .setSortOrder("ascending");
         orderBys.add(orderBy);
-
-//        List<DateRangeValues> metrics = row.getMetrics();
-//        for (DateRangeValues dateRangeValues : metrics) {
-//            List<String> values = dateRangeValues.getValues();
-//            for (int i = 0; i < MetricList.size(); i++) {
-//                Metric metric = MetricList.get(i);
-//                if (metric.getExpression().equals("ga:sessionDuration")) {
-//                    double sessionDurationInSeconds = Double.parseDouble(values.get(i));
-//                    int minutes = (int) (sessionDurationInSeconds / 60);
-//                    int seconds = (int) (sessionDurationInSeconds % 60);
-//                    System.out.println("평균 페이지 머문 시간: " + minutes + "분 " + seconds + "초");
-//                }
-//            }
 
         // Create the ReportRequest object.
         ReportRequest request = new ReportRequest()
@@ -137,10 +131,8 @@ public class AnalyticsReporting {
                 .setDateRanges(Arrays.asList(dateRange))
                 .setMetrics(Arrays.asList(sessions))
                 .setMetrics(MetricList)
-                .setDimensions(Arrays.asList(pageTitle))
-//                .setDimensions(Arrays.asList(browser))
-                .setOrderBys(orderBys);
-
+                .setDimensions(Arrays.asList(pageTitle,browser,country,pathUrl));
+//                .setOrderBys(orderBys);
 
         ArrayList<ReportRequest> requests = new ArrayList<ReportRequest>();
         requests.add(request);
@@ -155,13 +147,99 @@ public class AnalyticsReporting {
         // Return the response.
         return response;
     }
+    private GetReportsResponse getBrowser(com.google.api.services.analyticsreporting.v4.AnalyticsReporting service) throws IOException {
+        DateRange dateRange = new DateRange();
+        dateRange.setStartDate("30DaysAgo");
+        dateRange.setEndDate("today");
+
+        Dimension browser = new Dimension().setName("ga:deviceCategory");
+        Dimension pathUrl = new Dimension().setName("ga:pagePath");
+
+
+        // Metrics(조회할 컬럼) 객체 생성
+        Metric sessions = new Metric()
+                .setExpression("ga:sessions")
+                .setAlias("sessions");
+
+        // 여러 Metrics를 사용할 경우
+        List<Metric> MetricList = new ArrayList<>();
+
+        List<OrderBy> orderBys = new ArrayList<>();
+        OrderBy orderBy = new OrderBy().setFieldName("pageviews")
+                .setSortOrder("ascending");
+        orderBys.add(orderBy);
+
+        // Create the ReportRequest object.
+        ReportRequest request = new ReportRequest()
+                .setViewId(VIEW_ID)
+                .setDateRanges(Arrays.asList(dateRange))
+                .setMetrics(Arrays.asList(sessions))
+                .setMetrics(MetricList)
+                .setDimensions(Arrays.asList(browser
+                        ,pathUrl
+                ));
+
+        ArrayList<ReportRequest> requests = new ArrayList<ReportRequest>();
+        requests.add(request);
+
+        // Create the GetReportsRequest object.
+        GetReportsRequest getReport = new GetReportsRequest()
+                .setReportRequests(requests);
+
+        // Call the batchGet method.
+        GetReportsResponse response = service.reports().batchGet(getReport).execute();
+        return response;
+    }
+    private GetReportsResponse getTodayUser(com.google.api.services.analyticsreporting.v4.AnalyticsReporting service) throws IOException {
+        DateRange dateRange = new DateRange();
+        dateRange.setStartDate("30DaysAgo");
+        dateRange.setEndDate("today");
+        Dimension gaDate = new Dimension().setName("ga:date");
+        Dimension pathUrl = new Dimension().setName("ga:pagePath");
+
+
+        // Metrics(조회할 컬럼) 객체 생성
+        Metric sessions = new Metric()
+                .setExpression("ga:sessions")
+                .setAlias("sessions");
+
+        // 여러 Metrics를 사용할 경우
+        List<Metric> MetricList = new ArrayList<>();
+
+        List<OrderBy> orderBys = new ArrayList<>();
+        OrderBy orderBy = new OrderBy().setFieldName("pageviews")
+                .setSortOrder("ascending");
+        orderBys.add(orderBy);
+
+        // Create the ReportRequest object.
+        ReportRequest request = new ReportRequest()
+                .setViewId(VIEW_ID)
+                .setDateRanges(Arrays.asList(dateRange))
+                .setMetrics(Arrays.asList(sessions))
+                .setMetrics(MetricList)
+                .setDimensions(Arrays.asList(gaDate
+                        ,pathUrl
+                ));
+
+        ArrayList<ReportRequest> requests = new ArrayList<ReportRequest>();
+        requests.add(request);
+
+        // Create the GetReportsRequest object.
+        GetReportsRequest getReport = new GetReportsRequest()
+                .setReportRequests(requests);
+
+        // Call the batchGet method.
+        GetReportsResponse response = service.reports().batchGet(getReport).execute();
+        return response;
+    }
 
     /**
      * Parses and prints the Analytics Reporting API V4 response.
      *
      * @param response An Analytics Reporting API V4 response.
      */
-    private static List<AnalyticsDto> printResponse(GetReportsResponse response) {
+    @Transactional
+    public List<AnalyticsDto> printResponse(GetReportsResponse response) {
         List<AnalyticsDto> analyticsList = new ArrayList<>();
 
         for (Report report: response.getReports()) {
@@ -183,11 +261,21 @@ public class AnalyticsReporting {
                 for (int i = 0; i < dimensionHeaders.size() && i < dimensions.size(); i++) {
                     String dimensionHeader = dimensionHeaders.get(i);
                     String dimensionValue = dimensions.get(i);
-                    System.out.println(dimensionHeaders.get(i) + ": " + dimensions.get(i));
+                    System.out.println("디맨션 - "+dimensionHeaders.get(i) + ": " + dimensions.get(i));
                     if (dimensionHeader.equals("dimension")) {
                         analyticsDto.setDimension(dimensionValue);
                     } else if (dimensionHeader.equals("ga:pageTitle")) {
                         analyticsDto.setPage_title(dimensionValue);
+                    } else if (dimensionHeader.equals("ga:browser")) {
+                        analyticsDto.setBrowser(dimensionValue);
+                    } else if (dimensionHeader.equals("ga:country")) {
+                        analyticsDto.setCountry(dimensionValue);
+                    } else if (dimensionHeader.equals("ga:date")) {
+                        analyticsDto.setReg_date(dimensionValue);
+                    } else if (dimensionHeader.equals("ga:pagePath")) {
+                        analyticsDto.setPath_url(dimensionValue);
+                    } else if (dimensionHeader.equals("ga:deviceCategory")) {
+                        analyticsDto.setBrowser(dimensionValue);
                     }
                 }
                 for (int j = 0; j < metrics.size(); j++) {
@@ -207,6 +295,8 @@ public class AnalyticsReporting {
                             analyticsDto.setNewUsers(metricValue);
                         }else if (metricName.equals("percentNewSessions")) {
                             analyticsDto.setPercentNewSessions(metricValue);
+                        }else if (metricName.equals("ga:visits")) {
+                            analyticsDto.setOneDayUsers(metricValue);
                         }
                         if (metricName.equals("sessionDuration")) {
                             double durationInSeconds = Double.parseDouble(metricValue);
@@ -216,7 +306,7 @@ public class AnalyticsReporting {
                             analyticsDto.setAvgSessions(avgSession);
                             System.out.println("평균 페이지 머문 시간: " + minutes + "분 " + seconds + "초");
                         } else {
-                            System.out.println(metricName + ": " + metricValue);
+                            System.out.println("매트릭 - "+metricName + ": " + metricValue);
                         }
                     }
                     LocalDate currentDate = LocalDate.now();
@@ -230,6 +320,7 @@ public class AnalyticsReporting {
                 }
             }
         }
+
         return  analyticsList;
     }
 
