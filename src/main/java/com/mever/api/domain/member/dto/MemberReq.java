@@ -18,7 +18,6 @@ public class MemberReq {
     private String survey;			// 설문
     private String dcrp;		    //메모
     private Long afterDay;		    //신규 가입 후 메일 순
-    private String regdate;
     private String appointment;
 
     public Member toMemberEntity(Member member) {

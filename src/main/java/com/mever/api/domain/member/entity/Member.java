@@ -30,6 +30,8 @@ public class Member {
     @Column
     private String dcrp;
     @Column
+    private String regdate;
+    @Column
     private Long afterDay;
     @Column
     private String appointment;
