@@ -45,6 +45,17 @@ public class MemberController {
             throw new Exception(e.getMessage());
         }
     }
+    @PostMapping("/chkAdmin")
+    @ApiOperation(value = "payment 정보", notes = "payment 정보를 반환합니다.")
+    public ResponseEntity chkAdmin(
+            @ApiParam(value = "요청 객체", required = true) @RequestBody MemberReq memberReq) throws Exception {
+        try {
+            return ResponseEntity.ok(memberService.chkAdmin(memberReq));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
 
     @PostMapping("/member/list")
     @ApiOperation(value = "회원정보 저장", notes = "회원정보 저장.")

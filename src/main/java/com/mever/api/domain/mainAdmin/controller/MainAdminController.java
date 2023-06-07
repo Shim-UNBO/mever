@@ -25,4 +25,12 @@ public class MainAdminController {
         String category = requestData.get("category");
         return ResponseEntity.ok(mainTitleService.getMainTitle(category));
     }
+    @PostMapping("/updateTitle")
+    public ResponseEntity<MainDto> updateTitle(
+            @RequestBody Map<String,String> requestData
+    ){
+        mainTitleService.updateTitle(requestData);
+
+        return ResponseEntity.ok().build();
+    }
 }

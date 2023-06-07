@@ -67,4 +67,7 @@ public class Analytics {
 
     @Column(name = "avg_sessions", nullable = true)
     private String avgSessions;
+
+    @Column(name = "exit_rate", nullable = true)
+    private String exitRate;
 }

@@ -20,34 +20,12 @@ public class AnalyticsController {
 
     @PostMapping("/analyticsList")
     public ResponseEntity<List> analytics(
-            @ApiParam(value = "소속 그룹", required = true) @RequestParam String group){
-        List<AnalyticsDto> analyticsList = analyticsReporting.analyticReport();
+            @ApiParam(value = "소속 그룹", required = true) @RequestParam String category){
+        List<AnalyticsDto> analyticsList = analyticsReporting.analyticReport(category);
         List<AnalyticsDto> filteredList;
-        switch (group) {
-            case "cafe1":
-                filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPath_url().equals("/cafe1/"))
-                        .collect(Collectors.toList());
-                break;
-            case "art1":
-                filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPath_url().equals("/art1/"))
-                        .collect(Collectors.toList());
-                break;
-            case "art2":
-                filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPath_url().equals("/art2/"))
-                        .collect(Collectors.toList());
-                break;
-            case "hospital1":
-                filteredList = analyticsList.stream()
-                        .filter(dto -> dto.getPath_url().equals("/hospital1/"))
-                        .collect(Collectors.toList());
-                break;
-            default:
-                // 그룹 값이 일치하는 경우가 없을 때 처리
-                return ResponseEntity.badRequest().build();
-        }
+        filteredList = analyticsList.stream()
+                .filter(dto -> dto.getPathUrl().equals(category))
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(filteredList);
     }

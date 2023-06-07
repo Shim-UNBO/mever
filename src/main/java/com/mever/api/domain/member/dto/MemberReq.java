@@ -13,8 +13,10 @@ import lombok.NoArgsConstructor;
 public class MemberReq {
     private String email;			// 이메일
     private String phone;			// 휴대폰 번호
-    private String password;			// 비밀번호
+    private String password;		// 비밀번호
     private String name;			// 이름
+    private String category;		// 사용자 소속 페이지
+    private String adminYn;		    // 관리자yn
     private String survey;			// 설문
     private String dcrp;		    //메모
     private Long afterDay;		    //신규 가입 후 메일 순
@@ -32,6 +34,8 @@ public class MemberReq {
                 .email(email)
                 .phone(phone)
                 .name(name)
+                .category(category)
+                .adminYn(adminYn)
                 .survey(survey)
                 .dcrp(dcrp)
                 .password(phone)

@@ -10,9 +10,9 @@ import lombok.*;
 @NoArgsConstructor
 public class AnalyticsDto {
     // 통계 시작년월일
-    private String start_ymd;
+    private String startYmd;
     // 통계 종료년월일
-    private String end_ymd;
+    private String endYmd;
     // 측정기준(성별, 브라우저별, OS별...... 접속현황, 이때 성별 이런것이 Dimension)
     private String dimension;
     // 브라우저 별
@@ -24,11 +24,11 @@ public class AnalyticsDto {
     // 측정기준값(male, female)
     private String dim_val;
     // 측정기준 페이지 타이틀
-    private String page_title;
+    private String pageTitle;
     // 페이지뷰
-    private String page_views;
+    private String totalPageview;
     // 페이지 경로
-    private String path_url;
+    private String pathUrl;
     // 접속사용자수
     private String users;
     // 하루 접속자 수
@@ -42,8 +42,12 @@ public class AnalyticsDto {
     // 새로운사용자수
     private String newUsers;
     // 등록일시
-    private String reg_date;
+    private String regDate;
     // 수정일시
-    private String mdfcn_dt;
+    private String updateDate;
+
+    private String startDate;
+    private String exitRate;
+
 
 }

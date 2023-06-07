@@ -39,14 +39,39 @@ public class AnalyticsReporting {
     private static final String KEY_FILE_LOCATION = "C:\\Users\\PC\\IdeaProjects\\mever\\src\\main\\java\\com\\mever\\api\\domain\\analytics\\client_secrets.json";
     private static final String VIEW_ID = "268763310";
 
-    public List<AnalyticsDto> analyticReport() {
+    public List<AnalyticsDto> analyticReport(String category) {
         List<AnalyticsDto> analyticsList = null;
         try {
             com.google.api.services.analyticsreporting.v4.AnalyticsReporting service = initializeAnalyticsReporting();
-//            GetReportsResponse response = getReport(service);
+            GetReportsResponse response = getReport(service);
 //            GetReportsResponse response = getTodayUser(service);
-            GetReportsResponse response = getBrowser(service);
+//            GetReportsResponse response = getBrowser(service);
             analyticsList = printResponse(response);
+            for (AnalyticsDto analyticsDto : analyticsList) {
+                Analytics analytics = Analytics.builder()
+                        .browser(analyticsDto.getBrowser())
+                        .country(analyticsDto.getCountry())
+                        .pathUrl(analyticsDto.getPathUrl())
+                        .totalUsers(analyticsDto.getUsers())
+                        .newUsers(analyticsDto.getNewUsers())
+                        .gaDate(analyticsDto.getRegDate())
+                        .startDate(analyticsDto.getStartYmd())
+                        .endDate(analyticsDto.getEndYmd())
+                        .updateDate(analyticsDto.getUpdateDate())
+                        .pageTitle(analyticsDto.getPageTitle())
+                        .channel(analyticsDto.getChannel())
+                        .oneDayUsers(analyticsDto.getOneDayUsers())
+                        .totalPageview(analyticsDto.getTotalPageview())
+                        .dimension(analyticsDto.getDimension())
+                        .regDate(analyticsDto.getRegDate())
+                        .sessions(analyticsDto.getSessions())
+                        .percentNewSessions(analyticsDto.getPercentNewSessions())
+                        .avgSessions(analyticsDto.getAvgSessions())
+                        .exitRate(analyticsDto.getExitRate())
+                        .build();
+
+                analyticsRepository.save(analytics);
+            }
 //            printResponse(response);
 
         } catch (Exception e) {
@@ -92,10 +117,6 @@ public class AnalyticsReporting {
 
         //Dimension별 조사가 이뤄진다. ex) 페이지타이틀별,성별별,브라우저별
         Dimension pageTitle = new Dimension().setName("ga:pageTitle");
-        Dimension browser = new Dimension().setName("ga:browser");
-        Dimension country = new Dimension().setName("ga:country");
-        Dimension channel = new Dimension().setName("ga:acquisitionTrafficChannel");
-        Dimension gaDate = new Dimension().setName("ga:sessionDate");
         Dimension pathUrl = new Dimension().setName("ga:pagePath");
 
 
@@ -110,6 +131,7 @@ public class AnalyticsReporting {
         Metric pageviews = new Metric().setExpression("ga:pageviews").setAlias("pageviews");
         Metric hits = new Metric().setExpression("ga:hits").setAlias("hits");
         Metric percentNewSessions = new Metric().setExpression("ga:percentNewSessions").setAlias("percentNewSessions");
+        Metric exitRate = new Metric().setExpression("ga:exits").setAlias("exitRate");
 
         // 여러 Metrics를 사용할 경우
         List<Metric> MetricList = new ArrayList<>();
@@ -119,6 +141,7 @@ public class AnalyticsReporting {
         MetricList.add(sessionDuration);
         MetricList.add(hits);
         MetricList.add(percentNewSessions);
+        MetricList.add(exitRate);
 
         List<OrderBy> orderBys = new ArrayList<>();
         OrderBy orderBy = new OrderBy().setFieldName("pageviews")
@@ -131,7 +154,7 @@ public class AnalyticsReporting {
                 .setDateRanges(Arrays.asList(dateRange))
                 .setMetrics(Arrays.asList(sessions))
                 .setMetrics(MetricList)
-                .setDimensions(Arrays.asList(pageTitle,browser,country,pathUrl));
+                .setDimensions(Arrays.asList(pathUrl));
 //                .setOrderBys(orderBys);
 
         ArrayList<ReportRequest> requests = new ArrayList<ReportRequest>();
@@ -265,15 +288,15 @@ public class AnalyticsReporting {
                     if (dimensionHeader.equals("dimension")) {
                         analyticsDto.setDimension(dimensionValue);
                     } else if (dimensionHeader.equals("ga:pageTitle")) {
-                        analyticsDto.setPage_title(dimensionValue);
+                        analyticsDto.setPageTitle(dimensionValue);
                     } else if (dimensionHeader.equals("ga:browser")) {
                         analyticsDto.setBrowser(dimensionValue);
                     } else if (dimensionHeader.equals("ga:country")) {
                         analyticsDto.setCountry(dimensionValue);
                     } else if (dimensionHeader.equals("ga:date")) {
-                        analyticsDto.setReg_date(dimensionValue);
+                        analyticsDto.setRegDate(dimensionValue);
                     } else if (dimensionHeader.equals("ga:pagePath")) {
-                        analyticsDto.setPath_url(dimensionValue);
+                        analyticsDto.setPathUrl(dimensionValue);
                     } else if (dimensionHeader.equals("ga:deviceCategory")) {
                         analyticsDto.setBrowser(dimensionValue);
                     }
@@ -286,7 +309,7 @@ public class AnalyticsReporting {
                         String metricName = metricHeaderEntry.getName();
                         String metricValue = values.getValues().get(k);
                         if (metricName.equals("pageviews")) {
-                            analyticsDto.setPage_views(metricValue);
+                            analyticsDto.setTotalPageview(metricValue);
                         } else if (metricName.equals("users")) {
                             analyticsDto.setUsers(metricValue);
                         } else if (metricName.equals("sessions")) {
@@ -297,6 +320,8 @@ public class AnalyticsReporting {
                             analyticsDto.setPercentNewSessions(metricValue);
                         }else if (metricName.equals("ga:visits")) {
                             analyticsDto.setOneDayUsers(metricValue);
+                        }else if (metricName.equals("ga:exits")) {
+                            analyticsDto.setExitRate(metricValue);
                         }
                         if (metricName.equals("sessionDuration")) {
                             double durationInSeconds = Double.parseDouble(metricValue);
@@ -314,8 +339,8 @@ public class AnalyticsReporting {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     String currentDateString = currentDate.format(formatter);
                     String sevenDaysAgoString = sevenDaysAgo.format(formatter);
-                    analyticsDto.setStart_ymd(sevenDaysAgoString);
-                    analyticsDto.setEnd_ymd(currentDateString);
+                    analyticsDto.setStartYmd(sevenDaysAgoString);
+                    analyticsDto.setEndYmd(currentDateString);
                     analyticsList.add(analyticsDto);
                 }
             }

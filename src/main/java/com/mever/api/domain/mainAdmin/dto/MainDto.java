@@ -1,23 +1,32 @@
 package com.mever.api.domain.mainAdmin.dto;
 
+import com.mever.api.domain.mainAdmin.entity.MainTitle;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
+import org.springframework.stereotype.Component;
 
 @Data
 @Builder
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Component
 public class MainDto {
     @ApiModelProperty("")
     private String title;
     @ApiModelProperty("")
-    private String sub_title;
+    private String subTitle;
     @ApiModelProperty("")
     private String category;
     @ApiModelProperty("")
-    private String update_date;
+    private String updateDate;
     @ApiModelProperty("")
     private String temp1;
+    public MainTitle toMainTitleBuilder(){
+        return MainTitle.builder()
+                .title(title)
+                .subTitle(subTitle)
+                .category(category)
+                .build();
+    }
 }
+

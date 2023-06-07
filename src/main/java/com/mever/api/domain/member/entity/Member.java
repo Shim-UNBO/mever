@@ -28,6 +28,10 @@ public class Member {
     @Column
     private String name;
     @Column
+    private String category;
+    @Column
+    private String adminYn;
+    @Column
     private String survey;
     @Column
     private String dcrp;
