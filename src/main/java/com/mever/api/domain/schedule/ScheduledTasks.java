@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -68,16 +69,21 @@ public class ScheduledTasks {
     @Value("${payments.toss.test_secret_api_key}")
     private String testSecretApiKey;
 
-   // @Scheduled(cron = "0 26 18 * * ?")
+    @Scheduled(cron = "0 00 9 * * ?")
     public void cronMailSend() throws MessagingException {
         List<ReservationEmailDto> emailRes =emailMapper.getEmailList();
 
         for(int i =0; i<emailRes.size();i++){
             ReservationEmailDto reservationEmailDto=ReservationEmailDto.builder()
-                .email(emailRes.get(i).getEmail())
-                .title(String.valueOf(emailRes.get(i).getTitle()))
-                .content(String.valueOf(emailRes.get(i).getContent()))
-                .build();
+                    .email(emailRes.get(i).getEmail())
+                    .sendDate(emailRes.get(i).getSendDate())
+                    .title(String.valueOf(emailRes.get(i).getTitle()))
+                    .content(String.valueOf(emailRes.get(i).getContent()))
+                    .phone(String.valueOf(emailRes.get(i).getPhone()))
+                    .period(String.valueOf(emailRes.get(i).getPeriod()))
+                    .mailcontent(String.valueOf(emailRes.get(i).getMailcontent()))
+                    .mailtitle(String.valueOf(emailRes.get(i).getMailtitle()))
+                    .build();
             sendService.schedulEmail(reservationEmailDto);
         }
     }

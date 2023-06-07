@@ -3,10 +3,12 @@ package com.mever.api.domain.member.entity;
 import com.mever.api.domain.member.dto.MemberRes;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
 
 @Entity
 @Getter
 @Setter
+@DynamicInsert
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

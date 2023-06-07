@@ -203,7 +203,6 @@ public class SendService {
 
         LocalDate formattedDate = LocalDate.parse(sendDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         String content = "";
-
         switch (reservationEmailDto.getPeriod()) {
             case "new":
                 sendDate = today.plusDays(1);

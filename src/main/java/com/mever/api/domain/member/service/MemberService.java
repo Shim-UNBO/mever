@@ -26,7 +26,6 @@ public class MemberService {
         } else {
             if(memberReq.getPhone()!=null&&!test.equals(memberReq.getPhone())){
                 member.setPhone(memberReq.getPhone());
-                System.out.println("123");
             }
             if(memberReq.getAppointment()!=null&&!test.equals(memberReq.getAppointment())){
                 member.setAppointment(memberReq.getAppointment());
