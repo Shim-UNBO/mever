@@ -18,6 +18,7 @@ public class EmailDto {
     private String title;
     private String content;
     private String phone;
+    private String type;
     MultipartFile file;
 
     public SendHistory toMailBuilder() {

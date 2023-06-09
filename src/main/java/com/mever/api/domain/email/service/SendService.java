@@ -191,14 +191,14 @@ public class SendService {
         helper.setFrom(new InternetAddress(FROM_ADDRESS,"메버", "UTF-8"));
         helper.setTo(reservationEmailDto.getEmail());
 
-
-        SmsDto smsDto = SmsDto.builder()
-                .msg(reservationEmailDto.getContent())
-                .email(reservationEmailDto.getEmail())
+        EmailDto emailDto = EmailDto.builder()
+                .content(reservationEmailDto.getContent())
+                .address(reservationEmailDto.getEmail())
+                .title(reservationEmailDto.getTitle())
                 .phone(reservationEmailDto.getPhone())
                 .type("mail")
                 .build();
-        sendRepository.save(smsDto.toSendBuilder());
+        sendRepository.save(emailDto.toMailBuilder());
 
         LocalDate today = LocalDate.now();
         LocalDate sendDate = today;
