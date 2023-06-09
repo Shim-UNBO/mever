@@ -11,6 +11,7 @@ import com.mever.api.domain.member.entity.Member;
 import com.mever.api.domain.member.repository.MemberRepository;
 import com.mever.api.domain.payment.dto.CancelOrderDto;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.transaction.Transactional;
@@ -34,6 +35,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -180,15 +182,15 @@ public class SendService {
     }
 
     @Transactional
-    public void schedulEmail(ReservationEmailDto reservationEmailDto) throws MessagingException {
+    public void schedulEmail(ReservationEmailDto reservationEmailDto) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         //메일 제목 설정
         helper.setSubject(reservationEmailDto.getTitle());
         helper.setText(reservationEmailDto.getContent(), false);
-        helper.setFrom(FROM_ADDRESS);
+        helper.setFrom(new InternetAddress(FROM_ADDRESS,"메버", "UTF-8"));
         helper.setTo(reservationEmailDto.getEmail());
-        emailSender.send(message);
+
 
         SmsDto smsDto = SmsDto.builder()
                 .msg(reservationEmailDto.getContent())
@@ -205,27 +207,36 @@ public class SendService {
         String content = "";
         switch (reservationEmailDto.getPeriod()) {
             case "new":
+
                 sendDate = today.plusDays(1);
                 content = String.valueOf(reservationEmailDto.getContent());
                 Member member = memberRepository.findByEmail(reservationEmailDto.getEmail()).orElse(null);
                 member.setAfterDay(Long.valueOf(member.getAfterDay()) + 1);
+
+                if(Long.valueOf(member.getAfterDay())>5)return;
+
                 memberRepository.save(member);
+                emailSender.send(message);
                 break;
             case "day":
                 sendDate = today.plusDays(1);
                 content = String.valueOf(reservationEmailDto.getContent());
+                emailSender.send(message);
                 break;
             case "week":
                 sendDate = today.plusWeeks(1);
                 content = String.valueOf(reservationEmailDto.getContent());
+                emailSender.send(message);
                 break;
             case "month":
                 sendDate = today.plusMonths(1);
                 content = String.valueOf(reservationEmailDto.getContent());
+                emailSender.send(message);
                 break;
             case "year":
                 sendDate = today.plusYears(1);
                 content = String.valueOf(reservationEmailDto.getContent());
+                emailSender.send(message);
                 break;
             default:
                 // 유효하지 않은 period 값이 들어온 경우
@@ -234,6 +245,7 @@ public class SendService {
         }
         //날짜 업데이트
         ReservationEmailDto reservationEmail = ReservationEmailDto.builder()
+                .seq(reservationEmailDto.getSeq())
                 .email(reservationEmailDto.getEmail())
                 .title(reservationEmailDto.getTitle())
                 .content(content)
@@ -241,7 +253,6 @@ public class SendService {
                 .period(reservationEmailDto.getPeriod())
                 .build();
         reservationMailRepository.save(reservationEmail.toReservationMailBuilder());
-
     }
 
     @Transactional
@@ -343,5 +354,26 @@ public class SendService {
             throw new Exception(e.getMessage());
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    @Transactional
+    public Object reservationList() throws Exception {
+
+        try {
+            return reservationMailRepository.findAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+    @Transactional
+    public Object delReservation(String id) throws Exception {
+
+        try {
+            reservationMailRepository.deleteById(Long.valueOf(id));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

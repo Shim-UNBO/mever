@@ -96,5 +96,24 @@ public class SendController {
             throw new Exception(e.getMessage());
         }
     }
-
+    @PostMapping(value = "/send/reservation/list")
+    @Operation(summary  = "메일 예약 이력", description = "메일 예약 이력")
+    public ResponseEntity ReservationList( )throws Exception {
+        try {
+            return ResponseEntity.ok(sendService.reservationList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+    @PostMapping(value = "/send/reservation/delete")
+    @Operation(summary  = "메일 예약 삭제", description = "메일 예약 삭제")
+    public ResponseEntity delReservation(@ApiParam(value = "seq") @RequestParam String seq )throws Exception {
+        try {
+            return ResponseEntity.ok(sendService.delReservation(seq));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
 }

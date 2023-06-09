@@ -32,6 +32,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -55,10 +56,8 @@ public class ScheduledTasks {
     private MemberRepository memberRepository;
     @Autowired
     private MemberMapper memberMapper;
-
     @Autowired
     private EmailMapper emailMapper;
-
     @Autowired
     private SubscriptionRepository subscriptionRepository;
     @Autowired
@@ -70,11 +69,12 @@ public class ScheduledTasks {
     private String testSecretApiKey;
 
     @Scheduled(cron = "0 00 9 * * ?")
-    public void cronMailSend() throws MessagingException {
+    public void cronMailSend() throws MessagingException, UnsupportedEncodingException {
         List<ReservationEmailDto> emailRes =emailMapper.getEmailList();
 
         for(int i =0; i<emailRes.size();i++){
             ReservationEmailDto reservationEmailDto=ReservationEmailDto.builder()
+                    .seq(emailRes.get(i).getSeq())
                     .email(emailRes.get(i).getEmail())
                     .sendDate(emailRes.get(i).getSendDate())
                     .title(String.valueOf(emailRes.get(i).getTitle()))

@@ -10,5 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ReservationMailRepository extends JpaRepository<ReservationMail, Long> {
+    public List<ReservationMail> findAll();
+    public void deleteById(Long id);
 
 }
