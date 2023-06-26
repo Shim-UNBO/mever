@@ -14,7 +14,7 @@ public class MainTitle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "seq", nullable = false, unique = true)
-    private Long seq;
+    int seq;
     @Column(name = "title",nullable = true)
     String title;
     @Column(name = "sub_title",nullable = true)
@@ -23,6 +23,8 @@ public class MainTitle {
     String category;
     @Column(name = "update_date",nullable = true)
     String updateDate;
+    @Column(name = "insert_date",nullable = true)
+    String insertDate;
     @Column(name = "temp1",nullable = true)
     String temp1;
 }

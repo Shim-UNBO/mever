@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @Tag(name = "회원")
 @RestController
 public class MemberController {
@@ -60,9 +62,12 @@ public class MemberController {
     @PostMapping("/member/list")
     @ApiOperation(value = "회원정보 저장", notes = "회원정보 저장.")
     public ResponseEntity memberList(
-            @ApiParam(value = "요청 객체", required = false) @RequestParam(required = false) String email) throws Exception {
+//            @ApiParam(value = "요청 객체", required = false) @RequestParam(required = false) String email
+            @RequestParam String category,String email) throws Exception {
         try {
-            return ResponseEntity.ok(memberService.memberList(email));
+//            String category = requestData.get("category");
+            System.out.println(category);
+            return ResponseEntity.ok(memberService.memberList(category,email));
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());

@@ -104,9 +104,10 @@ public class PaymentController {
 
     @PostMapping("/paymentList")
     @ApiOperation(value = "payment 정보", notes = "payment 정보를 반환합니다.")
-    public ResponseEntity<List> paymentList() throws Exception {
+    public ResponseEntity<List> paymentList(
+            @RequestBody Map<String,String> requestData) throws Exception {
         try {
-            return ResponseEntity.ok(paymentService.paymentList());
+            return ResponseEntity.ok(paymentService.paymentList(requestData));
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());

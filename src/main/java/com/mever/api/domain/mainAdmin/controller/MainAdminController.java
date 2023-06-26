@@ -2,6 +2,7 @@ package com.mever.api.domain.mainAdmin.controller;
 
 
 import com.mever.api.domain.mainAdmin.dto.MainDto;
+import com.mever.api.domain.mainAdmin.entity.MainTitle;
 import com.mever.api.domain.mainAdmin.service.MainAdminService;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -22,14 +24,29 @@ public class MainAdminController {
     public ResponseEntity<MainDto> getMainTitle(
             @RequestBody Map<String,String> requestData
     ){
-        String category = requestData.get("category");
-        return ResponseEntity.ok(mainAdminService.getMainTitle(category));
+//        String category = requestData.get("category");
+        return ResponseEntity.ok(mainAdminService.getMainTitle(requestData));
+    }
+    @PostMapping("/getMainTitleList")
+    public ResponseEntity getMainTitleList(
+            @RequestBody Map<String,String> requestData
+    ){
+//        String category = requestData.get("category");
+        return ResponseEntity.ok(mainAdminService.getMainTitleList(requestData));
     }
     @PostMapping("/updateTitle")
     public ResponseEntity<MainDto> updateTitle(
             @RequestBody Map<String,String> requestData
     ){
         mainAdminService.updateTitle(requestData);
+
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/deleteTitle")
+    public ResponseEntity<MainDto> deleteTitle(
+            @RequestBody Map<String,String> requestData
+    ){
+        mainAdminService.deleteTitle(requestData);
 
         return ResponseEntity.ok().build();
     }
@@ -46,17 +63,48 @@ public class MainAdminController {
             @RequestBody Map<String,String> requestData
     ){
             String category = requestData.get("category");
-            String orderName = requestData.get("orderName");
-            return ResponseEntity.ok(mainAdminService.getItemContents(category,orderName));
+            String orderId = requestData.get("orderId");
+            return ResponseEntity.ok(mainAdminService.getItemContents(category,orderId));
     }
     @PostMapping("/itemList")
     public ResponseEntity itemList(
-            @ApiParam(value = "요청 객체", required = false) @RequestParam(required = false) String category) throws Exception {
+            @RequestBody Map<String,String> requestData) throws Exception {
         try {
+            String category = requestData.get("category");
             return ResponseEntity.ok(mainAdminService.getItemList(category));
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(e.getMessage());
         }
     }
+    @PostMapping("/getReservation")
+    public ResponseEntity getReservation(
+            @RequestBody Map<String,String> requestData) throws Exception {
+        try {
+            String category = requestData.get("category");
+            return ResponseEntity.ok(mainAdminService.getReservation(category));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+    @PostMapping("/setReservation")
+    public ResponseEntity<MainDto> setReservation(
+            @RequestBody Map<String,String> requestData
+    )throws Exception {
+        mainAdminService.setReservation(requestData);
+
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/menuList")
+    public ResponseEntity menuList(
+            @RequestBody Map<String,String> requestData) throws Exception {
+        try {
+            return ResponseEntity.ok(mainAdminService.getMenuList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
+
 }

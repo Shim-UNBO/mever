@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,7 @@ public class PaymentService {
             throw new BussinessException(ExMessage.PAYMENT_ERROR_ORDER_NAME);
         }*/
         try {
-            Member member = memberRepository.findByEmail(paymentResHandleDto.getEmail()).orElse(null);
+            Member member = memberRepository.findByEmailAndPassword(paymentResHandleDto.getEmail(),paymentResHandleDto.getPhone()).orElse(null);
             member.setName(paymentResHandleDto.getName());
             memberRepository.save(member);
 
@@ -297,9 +298,16 @@ public class PaymentService {
     }
 
     @Transactional
-    public List<PaymentResHandleDto> paymentList() {
-        List<PaymentResHandleDto> paymentRes=orderMapper.getPayList();
-        return paymentRes;
+    public List<PaymentResHandleDto> paymentList(Map<String,String> requestData) {
+        List<PaymentResHandleDto> paymentRes;
+        String category = requestData.get("category");
+        if (category != null && !category.isEmpty()) {
+            paymentRes=orderMapper.getPartPayList(category);
+            return paymentRes;
+        }else{
+            paymentRes=orderMapper.getPayList();
+            return paymentRes;
+        }
     }
 
     @Transactional

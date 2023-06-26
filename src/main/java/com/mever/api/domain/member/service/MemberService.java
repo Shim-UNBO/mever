@@ -1,7 +1,9 @@
 package com.mever.api.domain.member.service;
 
 import com.mever.api.domain.member.dto.MemberReq;
+import com.mever.api.domain.member.dto.MemberRes;
 import com.mever.api.domain.member.entity.Member;
+import com.mever.api.domain.member.repository.MemberMapper;
 import com.mever.api.domain.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +12,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final MemberMapper memberMapper;
     @Transactional
     public ResponseEntity insMember(MemberReq memberReq) {
         String category = memberReq.getCategory();
@@ -36,7 +42,6 @@ public class MemberService {
         } else {
             if (memberReq.getPhone() != null && !test.equals(memberReq.getPhone())) {
                 member.setPhone(memberReq.getPhone());
-//                System.out.println("123");
             }
             if (memberReq.getAppointment() != null && !test.equals(memberReq.getAppointment())) {
                 member.setAppointment(memberReq.getAppointment());
@@ -70,7 +75,13 @@ public class MemberService {
     }
 
     @Transactional
-    public Object memberList(String email) {
+    public Object memberList(String category,String email) {
+//        String email = requestData.get("email");
+//        String category = requestData.get("category");
+        if(category != null && category != ""){
+            List<MemberRes> memberList = memberMapper.getMemberList(category);
+            return memberList;
+        }
         if(email==null||email.equals("")) {
             return memberRepository.findAll();
         }

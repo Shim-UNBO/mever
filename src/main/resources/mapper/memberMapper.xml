@@ -14,11 +14,10 @@
             m.survey,
             m.password,
             m.regdate,
-            m.after_day,
-            e.title,
-            e.content
+            m.after_day
         FROM member m
-                 left join mail e on m.after_day=e.day;
+        where category = #{category}
+--                  left join mail e on m.after_day=e.day;
     </select>
 
 </mapper>
