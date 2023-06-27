@@ -2,6 +2,7 @@ package com.mever.api.domain.email.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
 
 @Entity
 @Getter
@@ -9,6 +10,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@DynamicInsert
 @Table(name = "reservation_mail")
 public class ReservationMail {
     @Id
