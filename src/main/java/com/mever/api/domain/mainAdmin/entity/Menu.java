@@ -35,5 +35,7 @@ public class Menu {
     String map;
     @Column(name = "site_category",nullable = true)
     String siteCategory;
+    @Column(name = "category",nullable = true)
+    String category;
 }
 

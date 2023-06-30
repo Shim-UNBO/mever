@@ -75,6 +75,7 @@ public class PaymentResHandleDto {
     private Object chekout;
     //    @ApiModelProperty("결제 주기")
     private String period;
+    private String category;
     public Orders toOrderBuilder() {
         return Orders.builder()
                 .orderId(UUID.randomUUID().toString())

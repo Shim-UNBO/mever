@@ -2,6 +2,8 @@ package com.mever.api.domain.payment.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mever.api.domain.email.dto.EmailDto;
+import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.member.entity.Member;
 import com.mever.api.domain.member.repository.MemberRepository;
 import com.mever.api.domain.payment.dto.CancelOrderDto;
@@ -12,14 +14,12 @@ import com.mever.api.domain.payment.repository.CancelOrderRepository;
 import com.mever.api.domain.payment.repository.OrderMapper;
 import com.mever.api.domain.payment.repository.OrderRepository;
 import com.mever.api.domain.payment.repository.SubscriptionRepository;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -27,8 +27,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +41,8 @@ public class PaymentService {
     private final CancelOrderRepository cancelOrderRepository;
     private final MemberRepository memberRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final SendService sendService;
+    private final Map<String,String> mailData;
 
     @Value("${payments.toss.test_client_api_key}")
     private String testClientApiKey;
@@ -76,10 +76,20 @@ public class PaymentService {
             throw new BussinessException(ExMessage.PAYMENT_ERROR_ORDER_NAME);
         }*/
         try {
+            System.out.println(paymentResHandleDto);
             Member member = memberRepository.findByEmailAndPassword(paymentResHandleDto.getEmail(),paymentResHandleDto.getPhone()).orElse(null);
-            member.setName(paymentResHandleDto.getName());
-            memberRepository.save(member);
-
+            if (member == null){
+                Member newMember = new Member();
+//                member.setName(paymentResHandleDto.getName());
+                newMember.setEmail(paymentResHandleDto.getEmail());
+                newMember.setPhone(paymentResHandleDto.getPhone());
+                newMember.setPassword(paymentResHandleDto.getPhone());
+                newMember.setCategory(paymentResHandleDto.getCategory());
+                memberRepository.save(newMember);
+            }else {
+//                member.setName(paymentResHandleDto.getName());
+                memberRepository.save(member);
+            }
             Orders orders = paymentResHandleDto.toOrderBuilder();
             orderRepository.save(orders);
             paymentResHandleDto.setSuccessUrl(successCallBackUrl);
@@ -138,6 +148,11 @@ public class PaymentService {
         }
         Orders orders = orderRepository.findByOrderId(orderId);
         orderRepository.save(paymentResHandleDtorder.toOrderEntity(orders));
+        mailData.put("title",orders.getEmail()+"님 ["+orders.getOrderName()+"] 상품이 결제 되었습니다.");
+        mailData.put("content","["+orders.getOrderName()+"] 이 상품 "+orders.getTotalAmount()+"원 결제 되었습니다.");
+        mailData.put("email",orders.getEmail());
+        mailSetup(mailData);
+
         return paymentResHandleDtorder;
     }
     @Transactional
@@ -248,14 +263,18 @@ public class PaymentService {
         paymentResHandleDtorder.setPeriod(period);
         subscriptionRepository.save(paymentResHandleDtorder.subEntity(subscription));
         //자동 결제 날짜 계산
-        autoPayPeriod(customerKey,billingKey,period);
-
+        LocalDate payDate = autoPayPeriod(customerKey,billingKey,period);
+        //결제 메일 보내기 자동결제
+        mailData.put("title",orders.getEmail()+"님 ["+orders.getOrderName()+"] 상품이 결제 되었습니다.");
+        mailData.put("content","["+orders.getOrderName()+"] 이 상품 "+orders.getTotalAmount()+"원 자동 결제 되었습니다.\n"+"다음 결제일 :"+ payDate.toString());
+        mailData.put("email",orders.getEmail());
+        mailSetup(mailData);
 
         return paymentResHandleDtorder;
     }
 
     @Transactional
-    public void autoPayPeriod(String customerKey,String billingKey,String period) {
+    public LocalDate autoPayPeriod(String customerKey, String billingKey, String period) {
         Subscription subscription = subscriptionRepository.findByCustomerKeyAndBillingKey(customerKey, billingKey);
         LocalDate today = LocalDate.now();
 //        int paymentDay = LocalDate.parse(subscription.getStartDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).getDayOfMonth();
@@ -282,6 +301,7 @@ public class PaymentService {
         LocalDate formattedDate = LocalDate.parse(billingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         subscription.setPaymentDate(formattedDate);
         subscriptionRepository.save(subscription); // 변경 내용 저장
+        return formattedDate;
     }
     @Transactional
     public List<PaymentResHandleDto> subscriptionList(String email,String phone) {
@@ -346,5 +366,14 @@ public class PaymentService {
         orders.setStatus(paymentResHandleDto.getStatus());
         orderRepository.save(orders);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+    public void mailSetup(Map<String,String> mailData) throws MessagingException, IOException {
+        EmailDto emailDto = new EmailDto();
+        emailDto.setAddress(mailData.get("email"));
+        emailDto.setPhone(mailData.get("phone"));
+        emailDto.setTitle(mailData.get("title"));
+        emailDto.setContent(mailData.get("content"));
+        sendService.sendMultipleMessage(emailDto);
+
     }
 }

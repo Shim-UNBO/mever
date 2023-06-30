@@ -3,6 +3,8 @@ package com.mever.api.domain.mainAdmin.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Date;
+
 @Entity
 @Getter
 @Setter
@@ -33,5 +35,7 @@ public class Reservation {
     String reservationDate;
     @Column(name = "status",nullable = true)
     String status;
+    @Column(name = "update_date",nullable = true)
+    String updateDate;
 }
 

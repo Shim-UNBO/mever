@@ -1,5 +1,7 @@
 package com.mever.api.domain.mainAdmin.service;
 
+import com.mever.api.domain.email.dto.EmailDto;
+import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.mainAdmin.dto.MainDto;
 import com.mever.api.domain.mainAdmin.entity.ItemContents;
 import com.mever.api.domain.mainAdmin.entity.MainTitle;
@@ -9,13 +11,17 @@ import com.mever.api.domain.mainAdmin.repository.MainMapper;
 import com.mever.api.domain.mainAdmin.repository.MainRepository;
 import com.mever.api.domain.mainAdmin.repository.ReservationRepository;
 import com.sun.tools.javac.Main;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +34,7 @@ public class MainAdminService {
     private final MainMapper mainMapper;
     private final ReservationRepository reservationRepository;
     private final MainDto mainDto;
+    private final SendService sendService;
 
     @Transactional
     public MainDto getMainTitle(Map<String,String> requestData){
@@ -148,6 +155,11 @@ public class MainAdminService {
                 Reservation reservation = reservationRepository.findBySeq(seq);
                 reservation.setStatus(requestData.get("status"));
                 reservationRepository.save(reservation);
+                //이메일 보내기
+                requestData.put("title",reservation.getEmail()+"님 ["+reservation.getOrderId()+"] 예약이 ["+requestData.get("status")+"] 되었습니다.");
+                requestData.put("content","["+reservation.getOrderId()+"] "+reservation.getReservationDate()+" 에 예약이 ["+requestData.get("status")+"] 되었습니다.");
+                requestData.put("email",reservation.getEmail());
+                mailSetup(requestData);
                 return;
             }
             //item 예약 중복 검사 후 예약넣기
@@ -166,6 +178,9 @@ public class MainAdminService {
             newReservation.setOrderId(requestData.get("orderId"));
             newReservation.setInsertDate(String.valueOf(now));
             reservationRepository.save(newReservation);
+            //email 보내기
+
+
         }else {
             //첫 예약
             System.out.println("isNull : "+ orderId);
@@ -179,6 +194,7 @@ public class MainAdminService {
             mainDto.setInsertDate(String.valueOf(now));
             reservationRepository.save(mainDto.toReserBuilder());
         }
+
     }
     public List<Reservation> getReservation(String category) {
         System.out.println(category);
@@ -193,6 +209,37 @@ public class MainAdminService {
     }
     public List<Main> getMenuList() {
         return mainMapper.getMenuList();
+    }
+
+    //예약수정 기능
+    @Transactional
+    public void updateReservation(Map<String,String> requestData) throws MessagingException, IOException {
+        Timestamp nowTimestamp = new Timestamp(System.currentTimeMillis());
+        String nowTime =nowTimestamp.toString();
+        String seq = requestData.get("seq");
+        String reservationDate = requestData.get("reservationDate");
+        Reservation reservation = reservationRepository.findBySeq(seq);
+        String oldDate = reservation.getReservationDate();
+        String orderId = reservation.getOrderId();
+        String email = reservation.getEmail();
+        reservation.setReservationDate(reservationDate);
+        reservation.setUpdateDate(nowTime);
+        reservationRepository.save(reservation);
+        //TODO 메신져 전송 필요
+        String formattedReservationDate = "<span style=\"color: blue;\">" + reservationDate + "</span>";
+        requestData.put("title",email+"님 ["+orderId+"] 예약이 변경되었습니다.");
+        requestData.put("content","["+orderId+"] 이 예약이 "+reservationDate+"로 변경되었습니다.\n 이전 날짜 : "+oldDate);
+        requestData.put("email",email);
+        mailSetup(requestData);
+    }
+    public void mailSetup(Map<String,String> mailData) throws MessagingException, IOException {
+        EmailDto emailDto = new EmailDto();
+        emailDto.setAddress(mailData.get("email"));
+        emailDto.setPhone(mailData.get("phone"));
+        emailDto.setTitle(mailData.get("title"));
+        emailDto.setContent(mailData.get("content"));
+        sendService.sendMultipleMessage(emailDto);
+
     }
 
 }

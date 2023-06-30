@@ -5,6 +5,7 @@ import com.mever.api.domain.mainAdmin.dto.MainDto;
 import com.mever.api.domain.mainAdmin.entity.MainTitle;
 import com.mever.api.domain.mainAdmin.service.MainAdminService;
 import io.swagger.annotations.ApiParam;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -105,6 +107,14 @@ public class MainAdminController {
             e.printStackTrace();
             throw new Exception(e.getMessage());
         }
+    }
+    @PostMapping("/updateReservation")
+    public ResponseEntity<MainDto> updateReservation(
+            @RequestBody Map<String,String> requestData
+    ) throws MessagingException, IOException {
+        mainAdminService.updateReservation(requestData);
+
+        return ResponseEntity.ok().build();
     }
 
 }

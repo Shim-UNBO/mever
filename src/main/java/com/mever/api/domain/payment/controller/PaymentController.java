@@ -33,6 +33,7 @@ public class PaymentController {
             @ApiParam(value = "요청 객체", required = true)
             @RequestBody PaymentResHandleDto paymentResHandleDto) throws Exception {
         try {
+            System.out.println(paymentResHandleDto);
             return ResponseEntity.ok(paymentService.requestPayments(paymentResHandleDto));
         } catch (Exception e) {
             e.printStackTrace();
