@@ -27,7 +27,7 @@ public class SaleMemberService {
         if (saleMemberRepository.existsByUserId(memberDto.getUserId())) {
             return ResponseEntity.ok(HttpStatus.BAD_REQUEST);
         }
-        if(memberDto.getRecommender()!=null){
+        if(memberDto.getRecommenderId()!=null){
             SaleMember saleMember= saleMemberRepository.findByUserId(memberDto.getRecommenderId()).orElse(null);
             memberDto.setRecommender(saleMember.getId());
         }

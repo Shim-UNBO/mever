@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "sales_users")
+@Table(name = "sales_recommender")
 @DynamicInsert
 @DynamicUpdate
 public class SaleRecommender {
