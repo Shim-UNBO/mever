@@ -140,7 +140,8 @@ public class MainAdminService {
         String orderId = requestData.get("orderId");
         String reserDate = requestData.get("reservationDate");
         LocalDateTime now = LocalDateTime.now();
-        List<Reservation> reservations = reservationRepository.findByOrderId(orderId);
+        //List<Reservation> reservations = reservationRepository.findByOrderId(orderId);
+        List<Reservation> reservations = reservationRepository.findAll();
         //예약이 된 item이 존재할때
         if (!reservations.isEmpty()) {
             //예약 상태 변경
@@ -157,10 +158,14 @@ public class MainAdminService {
                 return;
             }
             //item 예약 중복 검사 후 예약넣기
+            int existingReservationCount = 0;
             for (Reservation reservation : reservations) {
                 if (reservation.getReservationDate().equals(reserDate)) {
-                    throw new Exception("이미 예약된 상품입니다.");
+                    existingReservationCount++;
                 }
+            }
+            if (existingReservationCount >= 3) {
+                throw new Exception("이미 세 개의 예약이 존재합니다.");
             }
             Reservation newReservation = new Reservation();
             newReservation.setReservationDate(requestData.get("reservationDate"));
