@@ -66,7 +66,6 @@ public class MemberController {
             @RequestParam String category,String email) throws Exception {
         try {
 //            String category = requestData.get("category");
-            System.out.println(category);
             return ResponseEntity.ok(memberService.memberList(category,email));
         } catch (Exception e) {
             e.printStackTrace();

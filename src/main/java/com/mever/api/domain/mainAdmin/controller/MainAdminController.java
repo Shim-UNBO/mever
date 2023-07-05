@@ -90,6 +90,17 @@ public class MainAdminController {
             throw new Exception(e.getMessage());
         }
     }
+    @PostMapping("/getReservation2")
+    public ResponseEntity getReservation2(
+            @RequestBody Map<String,String> requestData) throws Exception {
+        try {
+            String category = requestData.get("category");
+            return ResponseEntity.ok(mainAdminService.getReservation2(category));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(e.getMessage());
+        }
+    }
     @PostMapping("/setReservation")
     public ResponseEntity<MainDto> setReservation(
             @RequestBody Map<String,String> requestData

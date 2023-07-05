@@ -10,6 +10,8 @@ import com.mever.api.domain.mainAdmin.repository.ItemContentsRepository;
 import com.mever.api.domain.mainAdmin.repository.MainMapper;
 import com.mever.api.domain.mainAdmin.repository.MainRepository;
 import com.mever.api.domain.mainAdmin.repository.ReservationRepository;
+import com.mever.api.domain.member.entity.Member;
+import com.mever.api.domain.member.repository.MemberRepository;
 import com.sun.tools.javac.Main;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -21,7 +23,6 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ public class MainAdminService {
     private final ReservationRepository reservationRepository;
     private final MainDto mainDto;
     private final SendService sendService;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public MainDto getMainTitle(Map<String,String> requestData){
@@ -68,22 +70,14 @@ public class MainAdminService {
     }
     public void updateTitle(Map<String,String> requestData){
         String category = requestData.get("category");
-//        List<MainTitle> mainTitles = mainTitleRepository.findByCategoryOrderBySeqDesc(category);
-//        MainTitle mainTitle;
-//        if (mainTitles == null && mainTitles.size() > 0){
-            Date now = new Date();
-            String nowTime = now.toString();
+//            Date now = new Date();
+//            String nowTime = now.toString();
+            LocalDateTime now = LocalDateTime.now();
             mainDto.setCategory(requestData.get("category"));
             mainDto.setTitle(requestData.get("mainTitle"));
             mainDto.setSubTitle(requestData.get("subTitle"));
-            mainDto.setInsertDate(nowTime);
+            mainDto.setInsertDate(String.valueOf(now));
             mainTitleRepository.save(mainDto.toMainTitleBuilder());
-//        }else {
-//            mainTitle = mainTitles.get(0);
-//            mainTitle.setTitle(requestData.get("mainTitle"));
-//            mainTitle.setSubTitle(requestData.get("subTitle"));
-//            mainTitleRepository.save(mainTitle);
-//        }
     }
     public void deleteTitle(Map<String,String> requestData){
         int seq = Integer.parseInt(requestData.get("seq"));
@@ -197,15 +191,17 @@ public class MainAdminService {
 
     }
     public List<Reservation> getReservation(String category) {
-        System.out.println(category);
         if(category==null||category.equals("")) {
-            List<Reservation> reserList = reservationRepository.findAll();
-            for (int i=0; i < reserList.size();i++){
-
-            }
             return reservationRepository.findAll();
         }
         return reservationRepository.findByCategory(category);
+    }
+    public List<Member> getReservation2(String category) {
+        if(category==null||category.equals("")) {
+//            List<Reservation> reserList = reservationRepository.findAll();
+            return memberRepository.findAll();
+        }
+        return memberRepository.findByCategory(category);
     }
     public List<Main> getMenuList() {
         return mainMapper.getMenuList();
