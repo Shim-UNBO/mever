@@ -1,8 +1,11 @@
 package com.mever.api.domain.email.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mever.api.domain.email.dto.EmailDto;
 import com.mever.api.domain.email.dto.ReservationEmailDto;
 import com.mever.api.domain.email.dto.SmsDto;
+import com.mever.api.domain.email.dto.SmsResponseDTO;
 import com.mever.api.domain.email.entity.ReservationMail;
 import com.mever.api.domain.email.entity.SendHistory;
 import com.mever.api.domain.email.repository.ReservationMailRepository;
@@ -24,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -31,14 +35,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -49,15 +59,120 @@ import java.util.*;
 public class SendService {
     @Value("${spring.mail.username}")
     private String FROM_ADDRESS;
+//    @Value("${send.sms.userid}")
+//    private String smsUserid;
+//    @Value("${send.sms.userkey}")
+//    private String smsUserkey;
     private final JavaMailSender emailSender;
-    @Value("${send.sms.userid}")
-    private String smsUserid;
-    @Value("${send.sms.userkey}")
-    private String smsUserkey;
     @Autowired
     private MemberRepository memberRepository;
     private final SendRepository sendRepository;
     private final ReservationMailRepository reservationMailRepository;
+    @Value("${naver-cloud-sms.accessKey}")
+    private String accessKey;
+    @Value("${naver-cloud-sms.secretKey}")
+    private String secretKey;
+    @Value("${naver-cloud-sms.serviceId}")
+    private String serviceId;
+    @Value("${naver-cloud-sms.senderPhone}")
+    private String phone;
+
+    public String makeSignature(Long time) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+        String space = " ";
+        String newLine = "\n";
+        String method = "POST";
+        String url = "/sms/v2/services/"+ this.serviceId+"/messages";
+        String timestamp = time.toString();
+
+        String message = new StringBuilder()
+                .append(method)
+                .append(space)
+                .append(url)
+                .append(newLine)
+                .append(timestamp)
+                .append(newLine)
+                .append(accessKey)
+                .toString();
+
+        SecretKeySpec signingKey = new SecretKeySpec(secretKey.getBytes("UTF-8"), "HmacSHA256");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(signingKey);
+
+        byte[] rawHmac = mac.doFinal(message.getBytes("UTF-8"));
+        String encodeBase64String = Base64.getEncoder().encodeToString(rawHmac);
+        return encodeBase64String;
+    }
+    public Object sendNaver(String recipient, String message) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, JsonProcessingException, URISyntaxException {
+        Long time = System.currentTimeMillis();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("x-ncp-apigw-timestamp", time.toString());
+        headers.set("x-ncp-iam-access-key", accessKey);
+        headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
+        SmsDto.MessageDTO messageDto = new SmsDto.MessageDTO();
+        messageDto.setContent(message);
+        messageDto.setTo(recipient);
+        List<SmsDto.MessageDTO> messages = new ArrayList<>();
+        messages.add(messageDto);
+
+        SmsDto.SmsRequest smsRequest = SmsDto.SmsRequest.builder()
+                .type("SMS")
+                .from(phone) // 발신자 번호
+                .to(recipient) // 수신자 번호
+                .content(message)
+                .messages(messages)
+                .build();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String body = objectMapper.writeValueAsString(smsRequest);
+        HttpEntity<String> httpBody = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        SmsResponseDTO response = restTemplate.postForObject(new URI("https://sens.apigw.ntruss.com/sms/v2/services/"+ serviceId +"/messages"), httpBody, SmsResponseDTO.class);
+        SmsDto smsDto = SmsDto.builder()
+                .msg(smsRequest.getContent())
+                .email(smsRequest.getEmail())
+                .phone(smsRequest.getTo())
+                .type("sms")
+                .build();
+       ResponseEntity.ok(sendRepository.save(smsDto.toSendBuilder()));
+        return  response;
+
+//        String url = NAVER_SMS_API_URL.replace("{serviceId}", serviceId);
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.set("X-NCP-auth-key", accessKey);
+//        headers.set("X-NCP-service-secret", secretKey);
+//
+//        SmsDto.SmsRequest smsRequest = new SmsDto.SmsRequest();
+//        smsRequest.setType("SMS");
+//        smsRequest.setFrom(phone); // 발신자 번호
+//        smsRequest.setTo(recipient); // 수신자 번호
+//        smsRequest.setContent(message);
+//
+//        Mono<ResponseEntity<String>> responseMono = webClient.post()
+//                .uri(url)
+//                .headers(httpHeaders -> httpHeaders.addAll(headers))
+//                .body(BodyInserters.fromValue(smsRequest))
+//                .retrieve()
+//                .toEntity(String.class);
+//
+//        return responseMono.map(responseEntity -> {
+//            if (responseEntity.getStatusCode().is2xxSuccessful()) {
+//                SmsDto smsDto = SmsDto.builder()
+//                        .msg(smsRequest.getContent())
+//                        .email(smsRequest.getEmail())
+//                        .phone(smsRequest.getTo())
+//                        .type("sms")
+//                        .build();
+//                return ResponseEntity.ok(sendRepository.save(smsDto.toSendBuilder()));
+//            } else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//            }
+//        }).block();
+    }
 
     @Transactional
     public ResponseEntity sendMultipleMessage(EmailDto mailDto) throws MessagingException, IOException {
@@ -255,74 +370,75 @@ public class SendService {
         reservationMailRepository.save(reservationEmail.toReservationMailBuilder());
     }
 
-    @Transactional
-    public ResponseEntity<Object> sendSms(String phone, String email) throws Exception {
-        RestTemplate rest = new RestTemplate();
-        rest.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
-        //URI uri = URI.create("http://link.smsceo.co.kr/sendsms_test.php");
-        URI uri = URI.create("http://link.smsceo.co.kr/sendsms_utf8.php");
-
-        HttpHeaders headers = new HttpHeaders();
-        /*  headers.setContentType(MediaType.TEXT_HTML);*/
-        //headers.add("Content-Type", "text/html; charset=UTF-8");
-        //headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-        //headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED,);
-        // headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
-        headers.setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
-
-        /*JSONObject param = new JSONObject();*/
-        MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
-       /* param.put("phone", "01063645022");
-        param.put("msg", "test");
-        param.put("callback", "01072818209");
-        param.put("userid", "mever");
-        param.put("userkey", "BzxQZV1sDzVSYAdmUX4HOFZmB3QAM1MuA34=");*/
-        param.add("phone", phone);
-        param.add("msg", "300,000원 진행 <br>" +
-                "7일간 18,550,000 마감 <br>" +
-                "\"당일수익\"환급원칙<br>" +
-                "https://mever.me/");
-        param.add("callback", "01072818209");
-        param.add("userid", smsUserid);
-        param.add("return_url", "http://localhost:8080/send/sms/success");
-        param.add("userkey", smsUserkey);
-
-        SmsDto smsDto = SmsDto.builder()
-                .msg(param.get("msg").toString())
-                .email(email)
-                .phone(param.get("phone").toString())
-                .type("sms")
-                .build();
-
-        try {
-            String respon = rest.postForObject(uri, new HttpEntity<>(param, headers), String.class);
-            System.out.println(respon);
-            String[] params = respon.split("&");
-            Map<String, String> map = new HashMap<String, String>();
-           /*for (int i =0;i<1;i++)
-            {
-                String name = params[0].split("=")[0];
-                System.out.println(name);
-                String value="";
-                if(para.split("=")[1]!=null||!para.split("=")[1].equals("")){
-                    value = para.split("=")[1];
-                }
-                map.put(name, value);
-            }*/
-            sendRepository.save(smsDto.toSendBuilder());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception(e.getMessage());
-        }
-        // if (SmsDto == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
-      /*  Orders orders = orderRepository.findByPaymentKey(paymentKey);
-        cancelOrderRepository.save(paymentResHandleDto.toCancelOrder(orders));
-        orders.setStatus(paymentResHandleDto.getStatus());
-        orderRepository.save(orders);*/
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
+//        @Transactional
+//    public ResponseEntity<Object> sendSms(String phone, String email) throws Exception {
+//        RestTemplate rest = new RestTemplate();
+//        rest.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+//
+//        //URI uri = URI.create("http://link.smsceo.co.kr/sendsms_test.php");
+//        URI uri = URI.create("http://link.smsceo.co.kr/sendsms_utf8.php");
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        /*  headers.setContentType(MediaType.TEXT_HTML);*/
+//        //headers.add("Content-Type", "text/html; charset=UTF-8");
+//        //headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+//        //headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED,);
+//        // headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
+//        headers.setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
+//
+//        /*JSONObject param = new JSONObject();*/
+//        MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
+//       /* param.put("phone", "01063645022");
+//        param.put("msg", "test");
+//        param.put("callback", "01072818209");
+//        param.put("userid", "mever");
+//        param.put("userkey", "BzxQZV1sDzVSYAdmUX4HOFZmB3QAM1MuA34=");*/
+//        param.add("phone", phone);
+//        param.add("msg", "300,000원 진행 <br>" +
+//                "7일간 18,550,000 마감 <br>" +
+//                "\"당일수익\"환급원칙<br>" +
+//                "https://mever.me/");
+//        param.add("callback", "01072818209");
+//        param.add("userid", smsUserid);
+//        param.add("return_url", "http://localhost:8080/send/sms/success");
+//        param.add("userkey", smsUserkey);
+//
+//        SmsDto smsDto = SmsDto.builder()
+//                .msg(param.get("msg").toString())
+//                .email(email)
+//                .phone(param.get("phone").toString())
+//                .type("sms")
+//                .build();
+//
+//        try {
+//            String respon = rest.postForObject(uri, new HttpEntity<>(param, headers), String.class);
+//            System.out.println(respon);
+//            String[] params = respon.split("&");
+//            Map<String, String> map = new HashMap<String, String>();
+//           /*for (int i =0;i<1;i++)
+//            {
+//                String name = params[0].split("=")[0];
+//                System.out.println(name);
+//                String value="";
+//                if(para.split("=")[1]!=null||!para.split("=")[1].equals("")){
+//                    value = para.split("=")[1];
+//                }
+//                map.put(name, value);
+//            }*/
+//            sendRepository.save(smsDto.toSendBuilder());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new Exception(e.getMessage());
+//        }
+//        // if (SmsDto == null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//
+//      /*  Orders orders = orderRepository.findByPaymentKey(paymentKey);
+//        cancelOrderRepository.save(paymentResHandleDto.toCancelOrder(orders));
+//        orders.setStatus(paymentResHandleDto.getStatus());
+//        orderRepository.save(orders);*/
+//        return new ResponseEntity<>(HttpStatus.OK);
+//    }
 
     @Transactional
     public ResponseEntity<Object> successSms(SmsDto smsDto) throws Exception {

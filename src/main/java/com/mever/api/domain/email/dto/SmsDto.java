@@ -5,6 +5,9 @@ import com.mever.api.domain.email.entity.SendHistory;
 import com.mever.api.domain.member.entity.Member;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Data
 @Builder
 @Getter
@@ -37,5 +40,26 @@ public class SmsDto {
                 .content(msg)
                 .type("sms")
                 .build();
+    }
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MessageDTO {
+        String to;
+        String content;
+    }
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class SmsRequest  {
+        private String type;
+        private String from;
+        private String to;
+        private String content;
+        private String email;
+        List<MessageDTO> messages;
+
     }
 }

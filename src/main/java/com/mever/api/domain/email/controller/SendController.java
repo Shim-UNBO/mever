@@ -52,27 +52,17 @@ public class SendController {
             throw new Exception(e.getMessage());
         }
     }
-/*    @PostMapping(value = "/send/sms")
-    @Operation(summary  = "sms 전송", description = "email,phone 입력")
-    public ResponseEntity sendSms( @ApiParam(value = "email", required = true) @RequestBody SmsDto smsDto) throws Exception {
-        try {
-            return ResponseEntity.ok(sendService.sendSms(smsDto.getPhone(),smsDto.getEmail()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception(e.getMessage());
-        }
-    }*/
+//    @PostMapping(value = "/send/sms")
+//    @Operation(summary  = "sms 전송", description = "email,phone 입력")
+//    public ResponseEntity sendSms( @ApiParam(value = "email", required = true) @RequestBody SmsDto smsDto) throws Exception {
+//        try {
+//            return ResponseEntity.ok(sendService.sendSms(smsDto.getPhone(),smsDto.getEmail()));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new Exception(e.getMessage());
+//        }
+//    }
 
-    @PostMapping(value = "/send/sms")
-    @Operation(summary  = "sms 전송", description = "email,phone 입력")
-    public ResponseEntity sendSms( @ApiParam(value = "email", required = true) @RequestParam String email ,@ApiParam(value = "phone", required = true)@RequestParam String phone) throws Exception {
-        try {
-            return ResponseEntity.ok(sendService.sendSms(phone,email));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception(e.getMessage());
-        }
-    }
     @PostMapping(value = "/send/reservation/mail")
     @Operation(summary  = "메일 예약 전송", description = "메일 예약 전송 정보 저장")
     public ResponseEntity ReservationMail(@ApiParam(value = "email", required = true) @RequestBody List<ReservationEmailDto> reservationEmailDto) throws Exception {
