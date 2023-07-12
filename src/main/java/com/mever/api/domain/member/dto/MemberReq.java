@@ -21,6 +21,7 @@ public class MemberReq {
     private String dcrp;		    //메모
     private Long afterDay;		    //신규 가입 후 메일 순
     private String appointment;
+    private String message;
 
     public Member toMemberEntity(Member member) {
         member.setEmail(email);

@@ -52,7 +52,8 @@ public class MainDto {
     private String reservationDate;
     @ApiModelProperty("")
     private String insertDate;
-
+    @ApiModelProperty("")
+    private String message;
     public MainTitle toMainTitleBuilder(){
         return MainTitle.builder()
                 .title(title)

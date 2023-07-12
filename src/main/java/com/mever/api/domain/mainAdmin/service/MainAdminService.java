@@ -1,6 +1,7 @@
 package com.mever.api.domain.mainAdmin.service;
 
 import com.mever.api.domain.email.dto.EmailDto;
+import com.mever.api.domain.email.service.NaverSmsSender;
 import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.mainAdmin.dto.MainDto;
 import com.mever.api.domain.mainAdmin.entity.ItemContents;
@@ -37,6 +38,7 @@ public class MainAdminService {
     private final MainDto mainDto;
     private final SendService sendService;
     private final MemberRepository memberRepository;
+    private final NaverSmsSender naverSmsSender;
 
     @Transactional
     public MainDto getMainTitle(Map<String,String> requestData){
@@ -169,7 +171,7 @@ public class MainAdminService {
             }
             Reservation newReservation = new Reservation();
             newReservation.setReservationDate(requestData.get("reservationDate"));
-            newReservation.setMemo(requestData.get("memo"));
+            newReservation.setMemo(requestData.get("name"));
             newReservation.setEmail(requestData.get("email"));
             newReservation.setPhone(requestData.get("phone"));
             newReservation.setReserPrice(requestData.get("reserPrice"));
@@ -178,8 +180,9 @@ public class MainAdminService {
             newReservation.setInsertDate(String.valueOf(now));
             reservationRepository.save(newReservation);
             //email 보내기
-
-
+            if(requestData.get("message")!=null&&!requestData.get("message").equals("")){
+                sendService.sendNaver(requestData.get("phone"),requestData.get("message"));
+            }
         }else {
             //첫 예약
             System.out.println("isNull : "+ orderId);
@@ -187,11 +190,14 @@ public class MainAdminService {
             mainDto.setOrderId(requestData.get("orderId"));
             mainDto.setEmail(requestData.get("email"));
             mainDto.setPhone(requestData.get("phone"));
-            mainDto.setMemo(requestData.get("memo"));
+            mainDto.setMemo(requestData.get("name"));
             mainDto.setReservationDate(requestData.get("reservationDate"));
             mainDto.setReserPrice(requestData.get("reserPrice"));
             mainDto.setInsertDate(String.valueOf(now));
             reservationRepository.save(mainDto.toReserBuilder());
+            if(requestData.get("message")!=null&&!requestData.get("message").equals("")){
+                sendService.sendNaver(requestData.get("phone"),requestData.get("message"));
+            }
         }
 
     }
