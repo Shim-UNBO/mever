@@ -1,7 +1,6 @@
 package com.mever.api.domain.member.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mever.api.domain.email.service.NaverSmsSender;
 import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.member.dto.MemberReq;
 import com.mever.api.domain.member.dto.MemberRes;

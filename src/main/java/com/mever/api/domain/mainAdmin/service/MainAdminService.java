@@ -1,7 +1,6 @@
 package com.mever.api.domain.mainAdmin.service;
 
 import com.mever.api.domain.email.dto.EmailDto;
-import com.mever.api.domain.email.service.NaverSmsSender;
 import com.mever.api.domain.email.service.SendService;
 import com.mever.api.domain.mainAdmin.dto.MainDto;
 import com.mever.api.domain.mainAdmin.entity.ItemContents;
@@ -38,7 +37,6 @@ public class MainAdminService {
     private final MainDto mainDto;
     private final SendService sendService;
     private final MemberRepository memberRepository;
-    private final NaverSmsSender naverSmsSender;
 
     @Transactional
     public MainDto getMainTitle(Map<String,String> requestData){
